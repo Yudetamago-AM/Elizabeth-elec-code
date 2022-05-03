@@ -25,7 +25,20 @@ static int phase = 0;
 static int Timer = 600 * 1000; //600秒 は 10分
 
 void setup() {
-    
+    Serial.begin(9600);
+    Serial.println(F("serial begin"));
+
+    while (!bno.begin()) {
+        Serial.println("couldn't detect BNO055");
+        delay(50)
+    }
+    while (!GPS.begin(9600)) {
+        Serial.println(F("GPS not ready"));
+        delay(50);
+    }
+
+    GPS.sendMTKcommand(314, F(",0,1,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0"));
+    bno.setExtCrystalUse(true);
 }
 
 void loop() {
@@ -87,9 +100,10 @@ bool isMoving() {
     */
     const int thAccel[3] = [10, 10, 20];// 動いているかどうかの閾値設定(m/s^2)　添字0:x軸, 1:y軸，2:z軸
     bool isMoving = false;
-    imu::Vector<3> Accel = bno.getVector(Adafruit_BNO055::VECTOR_ACCELEROMETER));
+    sensors_event_t accelData; 
+    bno.getEvent(&accelData);
 
-    if ((Accel.x() <= thAccel[0]) && (Accel.y() <= thAccel[1]) && (Accel.z() <= thAccel[2])) {
+    if ((accelData.acceleration.x <= thAccel[0]) && (accelData.acceleration.y <= thAccel[1]) && (accelData.acceleration.z <= thAccel[2])) {
         isMoving = false;
     } else {
         isMoving = true;
