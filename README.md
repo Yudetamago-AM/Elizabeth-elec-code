@@ -19,7 +19,7 @@
 | microSD | AE-microSD-LLCNV | https://akizukidenshi.com/catalog/g/gK-14015/ |
 | モータードライバ | TB67H450FNG | https://www.marutsu.co.jp/contents/shop/marutsu/datasheet/TB67H450FNG.pdf |
 
-なお，マイコンと部品間のピンアサインは，を参照．
+なお，マイコンと部品間のピンアサインは，PinAssign.hを参照．
 
 ## 必要なライブラリ
 ### モーター制御
@@ -31,7 +31,7 @@ https://github.com/askn37/GPS_MTK333X
 AE-microSD-LLCNVを使う．がんばって書く．そんなに大変そうじゃ無い．
 
 ## メインプログラム
-これは，メインプログラム（）の中に関数として書いておき，適宜呼び出す物である．
+これは，メインプログラム（Main.ino）の中に関数として書いておき，適宜呼び出す物である．
 ### メイン制御
 各Seqをそれぞれ呼び出す．
 ### 着地時(seq1)
