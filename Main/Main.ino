@@ -3,6 +3,7 @@
 https://github.com/askn37/Futilities
 https://github.com/askn37/GPS_MTK333X
 https://github.com/adafruit/Adafruit_Sensor
+https://github.com/adafruit/Adafruit_BusIO
 https://github.com/adafruit/Adafruit_BNO055
 をライブラリに読み込んでおくこと．
 */
@@ -11,13 +12,14 @@ https://github.com/adafruit/Adafruit_BNO055
 #include <Arduino.h>
 #include <Wire.h>
 #include <bcdtime.h>
-#include <GPS_MTK333X_SoftwareSerial.h>
+#include <GPS_MTK333X_I2C.h>
 #include <Adafruit_Sensor.h>
 #include <Adafruit_BNO055.h>
 #include <utility/imumaths.h>
 #include "./PinAssign.h"
 #include "./Motor.h"
 
+GPS_MTK333X_I2C GPS;
 Adafruit_BNO055 bno = Adafruit_BNO055(55);
 
 static int phase = 0;
@@ -30,7 +32,7 @@ void setup() {
 
     while (!bno.begin()) {
         Serial.println("couldn't detect BNO055");
-        delay(50)
+        delay(50);
     }
     while (!GPS.begin(9600)) {
         Serial.println(F("GPS not ready"));
@@ -79,7 +81,7 @@ void Goal() {
 
 /*Landing用*/
 bool isLanded() {
-    bool isLanded
+    bool isLanded = false;
     if (Timer <= millis()) {
         phase = 1;
         isLanded = true;
@@ -98,7 +100,7 @@ bool isMoving() {
     動いていたらtrue，動いていなかったらfalseを返す
     動いていないということは，すなわちスタックしている，ということではない．
     */
-    const int thAccel[3] = [10, 10, 20];// 動いているかどうかの閾値設定(m/s^2)　添字0:x軸, 1:y軸，2:z軸
+    const int thAccel[3] = {10, 20, 10};// 動いているかどうかの閾値設定(m/s^2)　添字0:x軸, 1:y軸，2:z軸
     bool isMoving = false;
     sensors_event_t accelData; 
     bno.getEvent(&accelData);
