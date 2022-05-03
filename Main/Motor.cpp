@@ -1,4 +1,4 @@
-#include "./Motor.h"
+#include "./Motor.hpp"
 
 /*
 TB67H450FNGのロジック入力は

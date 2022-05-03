@@ -16,8 +16,8 @@ https://github.com/adafruit/Adafruit_BNO055
 #include <Adafruit_Sensor.h>
 #include <Adafruit_BNO055.h>
 #include <utility/imumaths.h>
-#include "./PinAssign.h"
-#include "./Motor.h"
+#include "./PinAssign.hpp"
+#include "./Motor.hpp"
 
 GPS_MTK333X_I2C GPS;
 Adafruit_BNO055 bno = Adafruit_BNO055(55);

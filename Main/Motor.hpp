@@ -3,7 +3,7 @@
 #define MOTOR_H
 
 #include <Arduino.h>
-#include "./PinAssign.h"
+#include "./PinAssign.hpp"
 
 class Motor {
     public:
