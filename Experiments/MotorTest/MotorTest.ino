@@ -17,6 +17,9 @@ void loop() {
 
     motor.back(50);// pwm 50
     delay(2000);
+
+    motor.rotate(20);// 20 degree
+    delay(2000);
     
     stop();
 }
