@@ -15,8 +15,8 @@ https://github.com/adafruit/Adafruit_BNO055
 #include <Adafruit_Sensor.h>
 #include <Adafruit_BNO055.h>
 #include <utility/imumaths.h>
-#include "./PinAssign.h"
-#include "./Motor.h"
+#include "PinAssign.h"
+#include "Motor.h"
 
 GPS_MTK333X_I2C GPS;
 Adafruit_BNO055 bno = Adafruit_BNO055(55);
@@ -42,7 +42,7 @@ void setup() {
         Serial.println(F("GPS not ready"));
         delay(50);
     }
-    GPS.sendMTKcommand(314, F(",0,1,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0"))   
+    GPS.sendMTKcommand(314, F(",0,1,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0"));
 }
 
 void loop() {
