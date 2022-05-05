@@ -35,7 +35,7 @@ void setup() {
         Serial.println("couldn't detect BNO055");
         delay(50);
     }
-    bno.setExtCrystalUse(true);
+    bno.setExtCrystalUse(true);//のっかってるからには使わねば（精度向上）
 
     /*GPS initialize*/
     while (!GPS.begin(9600)) {
