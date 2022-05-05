@@ -1,5 +1,5 @@
 #include <Arduino.h>
-#include "./PinAssign.h"
+#include "PinAssign.h"
 #include "Motor.h"
 
 Motor motor = Motor();
