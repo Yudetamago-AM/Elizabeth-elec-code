@@ -8,7 +8,7 @@ VIN(L): 0V to 0.8V
 というのも，VIN(HYS)がmin 100mV, max 300mVとなっているため（であってるのかな…）．
 */
 
-Motor() {
+void Motor() {
     pinMode(PIN_MO_R_A, OUTPUT);
     pinMode(PIN_MO_R_B, OUTPUT);
 
@@ -58,7 +58,7 @@ void foward_d(int distance) {
     */
 }
 
-/*
+
 void rotate(int angle) {
     //いい感じに9軸センサー呼び出す感じ
     if (angle > 0) {
@@ -69,4 +69,3 @@ void rotate(int angle) {
         return 0;
     }
 }
-*/
