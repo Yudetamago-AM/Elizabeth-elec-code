@@ -1,4 +1,4 @@
-#include "./Motor.hpp"
+#include "./Motor.h"
 
 /*
 TB67H450FNGのロジック入力は
@@ -8,7 +8,7 @@ VIN(L): 0V to 0.8V
 というのも，VIN(HYS)がmin 100mV, max 300mVとなっているため（であってるのかな…）．
 */
 
-Motor::Motor() {
+Motor() {
     pinMode(PIN_MO_R_A, OUTPUT);
     pinMode(PIN_MO_R_B, OUTPUT);
 
@@ -16,7 +16,7 @@ Motor::Motor() {
     pinMode(PIN_MO_L_B, OUTPUT);
 }
 
-void Motor::foward(int pwm) {
+void foward(int pwm) {
     digitalWrite(PIN_MO_R_B, LOW);
     digitalWrite(PIN_MO_L_B, LOW);
 
@@ -24,7 +24,7 @@ void Motor::foward(int pwm) {
     analogWrite(PIN_MO_L_A, pwm);
 }
 
-void Motor::back(int pwm) {
+void back(int pwm) {
     digitalWrite(PIN_MO_R_A, LOW);
     digitalWrite(PIN_MO_L_A, LOW);
 
@@ -32,7 +32,7 @@ void Motor::back(int pwm) {
     analogWrite(PIN_MO_L_B, pwm);
 }
 
-void Motor::stop() {
+void stop() {
     // すべてLOW
     digitalWrite(PIN_MO_R_A, LOW);
     digitalWrite(PIN_MO_L_A, LOW);
@@ -41,7 +41,7 @@ void Motor::stop() {
     digitalWrite(PIN_MO_L_B, LOW);
 }
 
-void Motor::foward_d(int distance) {
+void foward_d(int distance) {
     int time, operatingTime;
     const int tireOneRotate = 40.84;// cm （タイヤ1回転は13*pi = 40.84cmくらい？）
     const int timeOfOneRotate = 5;//実験で良い感じの値を決める．A定電流制御でトルク一定のはずだから，定数としていいはず．

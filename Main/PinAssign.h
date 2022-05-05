@@ -32,12 +32,12 @@ SCL A5
 #define PIN_SD_CLK 13 //SCL
 
 /*右モーター(M1)*/
-#define PIN_MO_R_PWM 9
-#define PIN_MO_R_LOW 5
+#define PIN_MO_R_A 9 // 回路図でPWM
+#define PIN_MO_R_B 5
 
 /*左モーター(M2)*/
-#define PIN_MO_L_PWM 10
-#define PIN_MO_L_LOW 6
+#define PIN_MO_L_A 10 // 回路図でPWM
+#define PIN_MO_L_B 6
 
 /*インジケーターLED*/
 #define PIN_LED 4
