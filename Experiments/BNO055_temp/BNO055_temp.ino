@@ -5,7 +5,7 @@
 #include <utility/imumaths.h>
 #include "PinAssign.h"
 
-Adafruit_BNO055 bno = Adafruit_BNO055(55);
+Adafruit_BNO055 bno = Adafruit_BNO055(55, 0x28);
 
 void setup() {
     /*serial initialize*/
@@ -17,7 +17,7 @@ void setup() {
         Serial.println("couldn't detect BNO055");
         delay(50);
     }
-    bno.setExtCrystalUse(true);
+    bno.setExtCrystalUse(true);//のっかってるからには使わねば（精度向上）
 }
 
 void loop() {
