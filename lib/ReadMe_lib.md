@@ -1,4 +1,9 @@
-### include pathの設定
+## このフォルダについて
+このフォルダは，Documents\Arduino\librariesなどにコピペすると，上手くビルドが通るはずです（もうちょっと良いやり方を考えたい…（実験用inoから使うのとMain.inoとかからつかうのと両立させたい．「../」））．
+### 仕方が無いので
+BunBackupなどのバックアップソフトで，1分おきにlibフォルダを丸々バックアップみたいなことをして対応してます
+
+## include pathの設定
 .vscode内c_cpp_properties.json
 ```
 "configurations": [
@@ -11,8 +16,7 @@
                 "${workspaceFolder}/**",
                 "C:\\Program Files (x86)\\Arduino\\libraries",
                 "D:\\Documents\\Arduino\\libraries",
-                "C:\\Program Files (x86)\\Arduino\\hardware\\arduino\\avr\\libraries",
-                "C:\\Users\\Akio\\Desktop\\DERC\\CanSat2022_soft\\CanSat2022\\lib"
+                "C:\\Program Files (x86)\\Arduino\\hardware\\arduino\\avr\\libraries"
             ],
             "forcedInclude": [],
             "cStandard": "c17",
@@ -30,14 +34,11 @@ settings.json（「Ctrlと,」で開ける）内
         "${workspaceFolder}/",
         "D:\\Documents\\Arduino\\libraries",
         "C:\\Program Files (x86)\\Arduino\\libraries",
-        "C:\\Program Files (x86)\\Arduino\\hardware\\arduino\\avr\\libraries",
-        "C:\\Users\\Akio\\Desktop\\DERC\\CanSat2022_soft\\CanSat2022\\lib"
+        "C:\\Program Files (x86)\\Arduino\\hardware\\arduino\\avr\\libraries"
     ],
     "C_Cpp.default.includePath": [
         "D:\\Documents\\Arduino\\libraries",
         "C:\\Program Files (x86)\\Arduino\\libraries",
-        "C:\\Program Files (x86)\\Arduino\\hardware\\arduino\\avr\\libraries",
-        "C:\\Users\\Akio\\Desktop\\DERC\\CanSat2022_soft\\CanSat2022\\lib"
-    ]
+        "C:\\Program Files (x86)\\Arduino\\hardware\\arduino\\avr\\libraries"
 ```
 など適宜設定のこと
