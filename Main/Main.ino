@@ -11,7 +11,6 @@ https://github.com/adafruit/Adafruit_BNO055
 
 #include <Arduino.h>
 #include <Wire.h>
-#include <bcdtime.h>
 #include <GPS_MTK333X_I2C.h>
 #include <Adafruit_Sensor.h>
 #include <Adafruit_BNO055.h>
@@ -27,20 +26,23 @@ static int phase = 0;
 static int Timer = 600 * 1000; //600秒 は 10分
 
 void setup() {
+    /*serial (for debug) initialize*/
     Serial.begin(9600);
     Serial.println(F("serial begin"));
 
+    /*BNO055 initialize*/
     while (!bno.begin()) {
         Serial.println("couldn't detect BNO055");
         delay(50);
     }
+    bno.setExtCrystalUse(true);
+
+    /*GPS initialize*/
     while (!GPS.begin(9600)) {
         Serial.println(F("GPS not ready"));
         delay(50);
     }
-
-    GPS.sendMTKcommand(314, F(",0,1,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0"));
-    bno.setExtCrystalUse(true);
+    GPS.sendMTKcommand(314, F(",0,1,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0"))   
 }
 
 void loop() {
@@ -117,6 +119,7 @@ double Distance() {
     /*
     距離(cm)を返す
     一応，九軸センサー内蔵の温度センサーで温度を見て，校正しているが，だめっぽかったら15℃として計算してる
+    これは, ambient temperature なのか， sensor temperatureなのか，よくわからん（データーシートにも混在）→実験してみる
     */
     int Duration, temp = bno.getTemp();
     double Distance;
