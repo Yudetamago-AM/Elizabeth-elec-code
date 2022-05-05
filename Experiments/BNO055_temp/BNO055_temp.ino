@@ -5,6 +5,8 @@
 #include <utility/imumaths.h>
 #include "./PinAssign.h"
 
+Adafruit_BNO055 bno = Adafruit_BNO055(55);
+
 void setup() {
     /*serial initialize*/
     Serial.begin(9600);
