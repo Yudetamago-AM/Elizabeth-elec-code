@@ -6,7 +6,6 @@
 
 #include <Arduino.h>
 #include <Wire.h>
-#include <bcdtime.h>
 #include <GPS_MTK333X_I2C.h>
 
 GPS_MTK333X_I2C GPS;
