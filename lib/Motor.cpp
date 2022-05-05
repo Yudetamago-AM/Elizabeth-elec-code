@@ -60,12 +60,80 @@ void Motor::foward_d(int distance) {
 
 
 void Motor::rotate(int angle) {
+    /*旋回速度，実験で決定する*/
+    int rotatePWM = 30;
+    /*
+    PIN_MO_L/R_Bはそれぞれ5,6ピンを使っているので，デューティー比が若干高くなるそう（下リファレンス）．
+    http://www.musashinodenpa.com/arduino/ref/index.php?f=0&pos=2153
+
+    具体的には，5/6ピンから977Hz
+    9/10ピンから490Hz
+    3/11ピンから490Hzという3つがあり，490*2 = 980のためと思われる．
+    （一応）その調整をする．
+    */
+    int offsetPWM = 1;//（およそ）1秒(50ms*20)に1回**offsetPWMの値**を引いたPWMでうごかす
+    int count = 0;
+
     //いい感じに9軸センサー呼び出す感じ
+    //cf1. https://learn.adafruit.com/adafruit-bno055-absolute-orientation-sensor/arduino-code
+    //cf2. https://forums.adafruit.com/viewtopic.php?f=19&t=91723&p=462337#p462337
+    /*
+    ↑では，
+    sensors_event_t rotate;
+    bno.getEvent(&rotate);
+    みたいに書いてあるが，
+    https://learn.adafruit.com/using-the-adafruit-unified-sensor-driver/how-does-it-work#void-getevent-sensors-event-t-star
+    にあるように，Quternionはgeteventでは取得出来ない（=Raw Sensor Dataとして取得する必要がある）
+    （なんのための"Unified" Sensor Systemだ？？，下手に使えんでないか）
+    */
+    //cf3. http://l52secondary.blog.fc2.com/blog-entry-50.html
+    
+    /*
+    そのままEulerで取得するとpitch(y)かroll(x)軸が±45度を超えると，まともに使えるデータでなくなるから
+    クォータニオンで値を取得してオイラー角に変換する
+    ちなみに，（正）「クォータニオン」（誤）「クォータ二オン」，（誤）はニが2になってる，おのれATOK！
+    */
+    imu::Quaternion q_orientation_now = bno.getQuat();
+    q_orientation_now.normalize;//重力分を取り除く（vector.h）
+
+    /*入れ替え*/
+    float temp = q_orientation_now.x();
+    q_orientation_now.x() = -q_orientation_now.y();
+    q_orientation_now.y() = temp;
+    orientation.z() = -q_orientation_now.z();
+
+    imu::Vector<3> e_orientation_now = q_orientation_now.toEuler();
     if (angle > 0) {
+        /*右は後転，左は正転*/
+        while ((-180/M_PI * q_orientation_now.z()) <= angle) {
+            digitalWrite(PIN_MO_L_B, LOW);
+            digitalWrite(PIN_MO_R_A, LOW);
 
+            analogWrite(PIN_MO_L_A, rotatePWM);
+            if (count < 20) {
+                analogWrite(PIN_MO_R_B, rotatePWM);
+                count++;
+            } else {
+                analogWrite(PIN_MO_R_B, rotatePWM - offcetPWM);
+                count = 0;
+            }
+        }
     } else if (angle < 0) {
+        while ((-180/M_PI * q_orientation_now.z()) <= angle) {
+            /*右は正転，左は後転*/
+            digitalWrite(PIN_MO_L_A, LOW);
+            digitalWrite(PIN_MO_R_B, LOW);
 
+            analogWrite(PIN_MO_L_B, rotatePWM);
+            if (count < 20) {
+                analogWrite(PIN_MO_R_A, rotatePWM);
+                count++;
+            } else {
+                analogWrite(PIN_MO_R_A, rotatePWM - offsetPWM);
+                count = 0;
+            }
+        }
     } else {
-        return 0;
+        return;
     }
 }
