@@ -1,6 +1,6 @@
 #include <Arduino.h>
-#include "PinAssign.h"
-#include "Motor.h"
+#include <PinAssign.h>
+#include <Motor.h>
 
 Motor motor = Motor();
 
@@ -20,6 +20,6 @@ void loop() {
 
     motor.rotate(20);// 20 degree
     delay(2000);
-    
+
     stop();
 }

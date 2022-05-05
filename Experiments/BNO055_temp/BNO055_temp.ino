@@ -3,7 +3,7 @@
 #include <Adafruit_Sensor.h>
 #include <Adafruit_BNO055.h>
 #include <utility/imumaths.h>
-#include "PinAssign.h"
+#include <PinAssign.h>
 
 Adafruit_BNO055 bno = Adafruit_BNO055(55, 0x28);
 
