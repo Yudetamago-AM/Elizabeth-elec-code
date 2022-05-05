@@ -1,20 +1,21 @@
 #include <Arduino.h>
 #include "./PinAssign.h"
-#include "./Motor.h"
+#include "Motor.h"
+
+Motor motor = Motor();
 
 void setup() {
-    Motor();
 
 }
 
 void loop() {
-    foward(100);
+    motor.foward(100);// pwm 100
     delay(2000);
 
-    stop();
+    motor.stop();
     delay(2000);
 
-    back(50);
+    motor.back(50);// pwm 50
     delay(2000);
     
     stop();
