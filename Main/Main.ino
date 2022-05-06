@@ -14,8 +14,10 @@ https://github.com/adafruit/Adafruit_BNO055
 #include <Adafruit_Sensor.h>
 #include <Adafruit_BNO055.h>
 #include <utility/imumaths.h>
+/*以下lib内自作ライブラリ*/
 #include <PinAssign.h>
 #include <Motor.h>
+#include <SD_RW.h>
 
 int phase = 0;
 /*重要！！タイマー！！ミリ秒単位で指定*/
@@ -23,26 +25,38 @@ long Timer = 600000; //600 * 1000, 600秒 は 10分
 
 GPS_MTK333X_I2C GPS;
 Adafruit_BNO055 bno = Adafruit_BNO055(55);
+Motor motor = Motor();
+SD_RW SDC = SD_RW();
 
 void setup() {
     /*ニクロム線の初期設定*/
     pinMode(PIN_NICHROME, OUTPUT);
     digitalWrite(PIN_NICHROME, LOW);
-        /*serial (for debug) initialize*/
+
+    /*serial (for debug) initialize*/
     Serial.begin(9600);
     Serial.println(F("serial begin"));
 
+    /*SD initialize*/
+    while (!SD.begin(PIN_SD_CS)){
+        Serial.println(F("SD not ready"));
+        delay(100);
+    }
+    SDC.init();//順序間違えない
+    Serial.println(F("SD ready"));
+
     /*BNO055 initialize*/
     while (!bno.begin()) {
-        Serial.println("couldn't detect BNO055");
-        delay(50);
+        Serial.println("BNO055 not ready");
+        delay(100);
     }
     bno.setExtCrystalUse(true);//のっかってるからには使わねば（精度向上）
+    Serial.println(F("BNO055 ready"));
 
     /*GPS initialize*/
     while (!GPS.begin()) {
         Serial.println(F("GPS not ready"));
-        delay(50);
+        delay(100);
     }
     // GPS.sendMTKcommand(220, F(",1000"));			// 220 PMTK_API_SET_FIX_CTL (MTK3339)
     GPS.sendMTKcommand(300, F(",1000,0,0,0,0"));    // 300 PMTK_API_SET_FIX_CTL
@@ -50,6 +64,7 @@ void setup() {
     // GPS.sendMTKcommand(353, F(",1,0,0,0,0"));
     GPS.sendMTKcommand(351, F(",1"));
     GPS.sendMTKcommand(314, F(",0,1,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0"));
+    Serial.println(F("GPS ready"));
 }
 
 void loop() {
