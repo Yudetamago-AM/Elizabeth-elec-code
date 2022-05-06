@@ -52,13 +52,14 @@ void Motor::foward_d(int distance) {
     if((time + operatingTime) <= millis()) {
         stop();
     }
+    return;
     /*
     ほんとうなら，つど加速度の値と時間を記録しておいて，進んだ距離を推定して，
     フィードバックすべきだが，めんどくさいし，計算量も多くなるので，余裕があったらということにしておく
     */
 }
 
-
+/*Rotate to the ABSOLUTE angle (in euler)*/
 void Motor::rotate(int angle) {
     /*旋回速度，実験で決定する*/
     int rotatePWM = 30;
@@ -94,17 +95,18 @@ void Motor::rotate(int angle) {
     ちなみに，（正）「クォータニオン」（誤）「クォータ二オン」，（誤）はニが2になってる，おのれATOK！
     */
     imu::Quaternion q_orientation_now = bno.getQuat();
-    q_orientation_now.normalize;//重力分を取り除く（vector.h）
+    q_orientation_now.normalize();//重力分を取り除く（vector.h）
 
     /*入れ替え*/
     float temp = q_orientation_now.x();
     q_orientation_now.x() = -q_orientation_now.y();
     q_orientation_now.y() = temp;
-    orientation.z() = -q_orientation_now.z();
+    q_orientation_now.z() = -q_orientation_now.z();
 
     imu::Vector<3> e_orientation_now = q_orientation_now.toEuler();
-    if (angle > 0) {
-        while ((-180/M_PI * q_orientation_now.z()) <= angle) {
+    float destAngle = angle - (-180/M_PI * e_orientation_now.z());
+    if (destAngle > 0) {
+        while ((-180/M_PI * e_orientation_now.z()) <= angle) {
             /*右は後転，左は正転*/
             digitalWrite(PIN_MO_L_B, LOW);
             digitalWrite(PIN_MO_R_A, LOW);
@@ -114,12 +116,12 @@ void Motor::rotate(int angle) {
                 analogWrite(PIN_MO_R_B, rotatePWM);
                 count++;
             } else {
-                analogWrite(PIN_MO_R_B, rotatePWM - offcetPWM);
+                analogWrite(PIN_MO_R_B, rotatePWM - offsetPWM);
                 count = 0;
             }
         }
-    } else if (angle < 0) {
-        while ((-180/M_PI * q_orientation_now.z()) <= angle) {
+    } else if (destAngle < 0) {
+        while ((-180/M_PI * e_orientation_now.z()) <= angle) {
             /*右は正転，左は後転*/
             digitalWrite(PIN_MO_L_A, LOW);
             digitalWrite(PIN_MO_R_B, LOW);

@@ -17,6 +17,8 @@ public:
     void back(int pwm);
     void rotate(int angle); //正面を0として±180度
     void stop();
+private:
+    Adafruit_BNO055 bno = Adafruit_BNO055(55);
 };
 
 #endif

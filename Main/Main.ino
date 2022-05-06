@@ -15,11 +15,11 @@ https://github.com/adafruit/Adafruit_BNO055
 #include <Adafruit_BNO055.h>
 #include <utility/imumaths.h>
 #include <PinAssign.h>
-#include <Motor.hpp>
+#include <Motor.h>
 
 int phase = 0;
 /*重要！！タイマー！！ミリ秒単位で指定*/
-unsigned int Timer = 600 * 1000; //600秒 は 10分
+long Timer = 600000; //600 * 1000, 600秒 は 10分
 
 GPS_MTK333X_I2C GPS;
 Adafruit_BNO055 bno = Adafruit_BNO055(55);
