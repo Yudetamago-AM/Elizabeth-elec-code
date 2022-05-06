@@ -106,7 +106,7 @@ void Motor::rotate(int angle) {
     imu::Vector<3> e_orientation_now = q_orientation_now.toEuler();
     float destAngle = angle - (-180/M_PI * e_orientation_now.z());
     if (destAngle > 0) {
-        while ((-180/M_PI * e_orientation_now.z()) <= angle) {
+        while ((-180/M_PI * e_orientation_now.z()) <= destAngle) {
             /*右は後転，左は正転*/
             digitalWrite(PIN_MO_L_B, LOW);
             digitalWrite(PIN_MO_R_A, LOW);
@@ -121,7 +121,7 @@ void Motor::rotate(int angle) {
             }
         }
     } else if (destAngle < 0) {
-        while ((-180/M_PI * e_orientation_now.z()) <= angle) {
+        while ((-180/M_PI * e_orientation_now.z()) <= destAngle) {
             /*右は正転，左は後転*/
             digitalWrite(PIN_MO_L_A, LOW);
             digitalWrite(PIN_MO_R_B, LOW);
