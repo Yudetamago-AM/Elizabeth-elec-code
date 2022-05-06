@@ -12,11 +12,11 @@ class Motor {
 public:
     Motor();
 
-    foward(int pwm);
-    foward_d(int distance); // distance(cm)
-    back(int pwm);
-    rotate(int angle); //正面を0として±180度
-    stop();
+    void foward(int pwm);
+    void foward_d(int distance); // distance(cm)
+    void back(int pwm);
+    void rotate(int angle); //正面を0として±180度
+    void stop();
 }
 
 #endif
