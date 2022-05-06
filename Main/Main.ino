@@ -8,7 +8,6 @@ https://github.com/adafruit/Adafruit_BNO055
 をライブラリに読み込んでおくこと．
 */
 
-
 #include <Arduino.h>
 #include <Wire.h>
 #include <GPS_MTK333X_I2C.h>
@@ -16,14 +15,14 @@ https://github.com/adafruit/Adafruit_BNO055
 #include <Adafruit_BNO055.h>
 #include <utility/imumaths.h>
 #include <PinAssign.h>
-#include <Motor.h>
+#include <Motor.hpp>
+
+int phase = 0;
+/*重要！！タイマー！！ミリ秒単位で指定*/
+unsigned int Timer = 600 * 1000; //600秒 は 10分
 
 GPS_MTK333X_I2C GPS;
 Adafruit_BNO055 bno = Adafruit_BNO055(55);
-
-static int phase = 0;
-/*重要！！タイマー！！ミリ秒単位で指定*/
-static int Timer = 600 * 1000; //600秒 は 10分
 
 void setup() {
     /*serial (for debug) initialize*/
@@ -38,10 +37,15 @@ void setup() {
     bno.setExtCrystalUse(true);//のっかってるからには使わねば（精度向上）
 
     /*GPS initialize*/
-    while (!GPS.begin(9600)) {
+    while (!GPS.begin()) {
         Serial.println(F("GPS not ready"));
         delay(50);
     }
+    // GPS.sendMTKcommand(220, F(",1000"));			// 220 PMTK_API_SET_FIX_CTL (MTK3339)
+    GPS.sendMTKcommand(300, F(",1000,0,0,0,0"));    // 300 PMTK_API_SET_FIX_CTL
+    GPS.sendMTKcommand(225, F(",0"));               // 225 PMTK_SET_PERIODIC_MODE
+    // GPS.sendMTKcommand(353, F(",1,0,0,0,0"));
+    GPS.sendMTKcommand(351, F(",1"));
     GPS.sendMTKcommand(314, F(",0,1,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0"));
 }
 
