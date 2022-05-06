@@ -6,7 +6,7 @@
 #include <Adafruit_Sensor.h>
 #include <Adafruit_BNO055.h>
 #include <utility/imumaths.h>
-#include "PinAssign.h"
+#include <PinAssign.h>
 
 class Motor {
 public:
@@ -17,6 +17,6 @@ public:
     void back(int pwm);
     void rotate(int angle); //正面を0として±180度
     void stop();
-}
+};
 
 #endif
