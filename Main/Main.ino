@@ -25,7 +25,10 @@ GPS_MTK333X_I2C GPS;
 Adafruit_BNO055 bno = Adafruit_BNO055(55);
 
 void setup() {
-    /*serial (for debug) initialize*/
+    /*ニクロム線の初期設定*/
+    pinMode(PIN_NICHROME, OUTPUT);
+    digitalWrite(PIN_NICHROME, LOW);
+        /*serial (for debug) initialize*/
     Serial.begin(9600);
     Serial.println(F("serial begin"));
 
@@ -70,6 +73,8 @@ void loop() {
 void Landing() {
     if (isLanded()) {
         // 前にうごかしたりパラシュート切り離したり…
+        /*ニクロム線のカット*/
+        digitalWrite(PIN_NICHROME, HIGH);
     }
 }
 
