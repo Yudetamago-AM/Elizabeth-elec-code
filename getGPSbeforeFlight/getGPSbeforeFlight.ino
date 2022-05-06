@@ -19,6 +19,11 @@ void setup() {
         delay(100);
     }
 
+    // GPS.sendMTKcommand(220, F(",1000"));			// 220 PMTK_API_SET_FIX_CTL (MTK3339)
+    GPS.sendMTKcommand(300, F(",1000,0,0,0,0"));    // 300 PMTK_API_SET_FIX_CTL
+    GPS.sendMTKcommand(225, F(",0"));               // 225 PMTK_SET_PERIODIC_MODE
+    // GPS.sendMTKcommand(353, F(",1,0,0,0,0"));
+    GPS.sendMTKcommand(351, F(",1"));
     GPS.sendMTKcommand(314, F(",0,1,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0"));
 }
 
