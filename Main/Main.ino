@@ -43,7 +43,6 @@ void setup() {
         delay(100);
     }
     SDC.init();//順序間違えない
-    Serial.println(F("SD ready"));
 
     /*BNO055 initialize*/
     while (!bno.begin()) {
