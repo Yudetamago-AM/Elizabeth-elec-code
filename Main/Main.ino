@@ -26,7 +26,7 @@ long Timer = 600000; //600 * 1000, 600秒 は 10分
 GPS_MTK333X_I2C GPS;
 Adafruit_BNO055 bno = Adafruit_BNO055(55);
 Motor motor = Motor();
-SD_RW SDC = SD_RW();
+SD_RW sdrw = SD_RW();
 
 void setup() {
     /*ニクロム線の初期設定*/
@@ -42,11 +42,11 @@ void setup() {
         Serial.println(F("SD not ready"));
         delay(100);
     }
-    SDC.init();//順序間違えない
+    sdrw.init();//順序間違えない
 
     /*BNO055 initialize*/
     while (!bno.begin()) {
-        Serial.println("BNO055 not ready");
+        Serial.println(F("BNO055 not ready"));
         delay(100);
     }
     bno.setExtCrystalUse(true);//のっかってるからには使わねば（精度向上）
