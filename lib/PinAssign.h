@@ -39,8 +39,8 @@ SCL A5
 #define PIN_MO_L_A 10 // 回路図でPWM
 #define PIN_MO_L_B 6
 
-/*インジケーターLED*/
-#define PIN_LED 4
+/*フライトピン*/
+#define PIN_FLIGHT 4
 
 /*ニクロム線*/
 #define PIN_NICHROME 7

@@ -21,7 +21,7 @@ void SD_RW::init() {
     Serial.println(F("SD ready"));
 }
 
-void SD_RW::log(int mode, String text) {
+void SD_RW::log(String text) {
     File logText = SD.open("log_" + fileName, FILE_WRITE);
     if (logText) {
         if (countlog == 0) {
@@ -46,3 +46,8 @@ void SD_RW::gpsLog(bcdtime_t bcdtime, int32_t longitude, int32_t latitude, int32
         Serial.println(F("SD_RW gpslog error"));
     }
 }
+/*
+認識：自分の地点（gpsLog()），目標地点(log())
+制御：方角（），距離（）→GuideGPS，GuideDISTを書くときに，ついでに書く
+動作：制御との一致→
+*/

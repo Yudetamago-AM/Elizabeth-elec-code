@@ -93,7 +93,7 @@ void Landing() {
 }
 
 void GuideGPS() {
-
+    //
 }
 
 void GuideDIST() {

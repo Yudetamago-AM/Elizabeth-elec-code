@@ -20,7 +20,7 @@ class SD_RW {
         String fileName;
         int countFileName;
         int countlog = 0;
-        int gpscountlog = 0;
+        int countgpslog = 0;
 };
 
 #endif
