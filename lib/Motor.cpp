@@ -64,7 +64,7 @@ void motor_foward_d(int distance) {
 /*Rotate to the ABSOLUTE angle (in euler)*/
 void motor_rotate(int angle, float angleNow) {
     /*旋回速度，実験で決定する*/
-    int rotatePWM = 60;
+    byte rotatePWM = 60;
     /*
     PIN_MO_L/R_Bはそれぞれ5,6ピンを使っているので，デューティー比が若干高くなるそう（下リファレンス）．
     http://www.musashinodenpa.com/arduino/ref/index.php?f=0&pos=2153
