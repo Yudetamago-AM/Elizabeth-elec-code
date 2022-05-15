@@ -8,19 +8,14 @@
 #include <Wire.h>
 #include <bcdtime.h>
 
-class SD_RW {
-    public:
-        SD_RW();
+void sd_init();
+void sd_log(String text);
+void sd_gpsLog(bcdtime_t bcdtime, int32_t longitude, int32_t latitude, int32_t speed, float angle);
 
-        void init();
-        void log(String text);
-        void gpsLog(bcdtime_t bcdtime, int32_t longitude, int32_t latitude, int32_t speed, float angle);
+String fileName;
+int countFileName;
+boolean countlog = false;
+boolean countgpslog = false;
 
-    private:
-        String fileName;
-        int countFileName;
-        int countlog = 0;
-        int countgpslog = 0;
-};
 
 #endif

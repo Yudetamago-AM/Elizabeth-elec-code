@@ -1,10 +1,7 @@
 #include "SD_RW.h"
 
-SD_RW::SD_RW() {
+void sd_init() {
     pinMode(PIN_SD_CS, OUTPUT);
-}
-
-void SD_RW::init() {
     //起動する度，新しい名前のファイル作る（連番）
     //ファイル名は8.3まで（リファレンスより）
     //それをString fileNameに保存する
@@ -21,10 +18,10 @@ void SD_RW::init() {
     Serial.println(F("SD ready"));
 }
 
-void SD_RW::log(String text) {
+void sd_log(String text) {
     File logText = SD.open("log_" + fileName, FILE_WRITE);
     if (logText) {
-        if (countlog == 0) {
+        if (countlog == false) {
             logText.println(F("millis,log"));
         } else {
             logText.println(String(millis()) + "," + text);
@@ -32,12 +29,13 @@ void SD_RW::log(String text) {
     } else {
         Serial.println(F("SD_RW log error"));
     }
+    countlog = true;
 }
 
-void SD_RW::gpsLog(bcdtime_t bcdtime, int32_t longitude, int32_t latitude, int32_t speed, float angle) {//あらかじめ1/60000.0しておく
+void sd_gpsLog(bcdtime_t bcdtime, int32_t longitude, int32_t latitude, int32_t speed, float angle) {//あらかじめ1/60000.0しておく
     File logText = SD.open("gps_" + fileName, FILE_WRITE);
     if (logText) {
-        if (countgpslog == 0) {
+        if (countgpslog == false) {
             logText.println(F("millis,bcdtime,longitude,latitude,angle"));
         } else {
             logText.println(String(millis()) + String(bcdtime) + "," + String(longitude) + "," + String(latitude) + "," + String(angle));
@@ -45,6 +43,7 @@ void SD_RW::gpsLog(bcdtime_t bcdtime, int32_t longitude, int32_t latitude, int32
     } else {
         Serial.println(F("SD_RW gpslog error"));
     }
+    countgpslog = true;
 }
 /*
 認識：自分の地点（gpsLog()），目標地点(log())

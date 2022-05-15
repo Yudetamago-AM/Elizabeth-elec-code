@@ -8,17 +8,13 @@
 #include <utility/imumaths.h>
 #include <PinAssign.h>
 
-class Motor {
-public:
-    Motor();
-
-    void foward(int pwm);
-    void foward_d(int distance); // distance(cm)
-    void back(int pwm);
-    void rotate(int angle); //正面を0として±180度
-    void stop();
-private:
-    Adafruit_BNO055 bno = Adafruit_BNO055(55);
-};
+void motor_init();
+void motor_foward(byte pwmR, byte pwmL);
+//void motor_foward_d(int distance); // distance(cm) メモリ食うので廃止
+//void motor_back(int pwm); //使わない
+void motor_rotate(int angle, float angleNow); //正面を0として±180度
+void motor_stop();
+/*定数*/
+//const int radPI 57.2957795131;
 
 #endif
