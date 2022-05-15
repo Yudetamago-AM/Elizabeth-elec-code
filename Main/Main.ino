@@ -10,7 +10,7 @@ https://github.com/adafruit/Adafruit_BNO055
 
 #include <Arduino.h>
 #include <Wire.h>
-#include <GPS_MTK333X_I2C.h>
+#include <GPS_MTK333X_Serial.h>
 #include <Adafruit_Sensor.h>
 #include <Adafruit_BNO055.h>
 #include <utility/imumaths.h>
@@ -19,14 +19,12 @@ https://github.com/adafruit/Adafruit_BNO055
 #include <Motor.h>
 #include <SD_RW.h>
 
-int phase = 0;
+byte phase = 0;
 /*重要！！タイマー！！ミリ秒単位で指定*/
-long Timer = 600000; //600 * 1000, 600秒 は 10分
+unsigned long Timer = 600000; //600 * 1000, 600秒 は 10分
 
-GPS_MTK333X_I2C GPS;
+GPS_MTK333X_Serial GPS;
 Adafruit_BNO055 bno = Adafruit_BNO055(55);
-Motor motor = Motor();
-SD_RW sdrw = SD_RW();
 
 void setup() {
     /*ニクロム線の初期設定*/
@@ -42,7 +40,7 @@ void setup() {
         Serial.println(F("SD not ready"));
         delay(100);
     }
-    sdrw.init();//順序間違えない
+    sd_init();//順序間違えない
 
     /*BNO055 initialize*/
     while (!bno.begin()) {
@@ -64,6 +62,13 @@ void setup() {
     GPS.sendMTKcommand(351, F(",1"));
     GPS.sendMTKcommand(314, F(",0,1,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0"));
     Serial.println(F("GPS ready"));
+
+    /*Distance sensor initialize*/
+    pinMode(PIN_DIST_TRIG, OUTPUT);
+    pinMode(PIN_DIST_ECHO, INPUT);
+    
+    /*Motor initialize*/
+    motor_init();
 }
 
 void loop() {
@@ -80,6 +85,7 @@ void loop() {
         break;
     case 3:
         Goal();
+        break;
     }
 }
 
@@ -92,8 +98,16 @@ void Landing() {
     }
 }
 
+/*guide to the goal using GPS*/
 void GuideGPS() {
-    //
+    /*方位・距離を計算*/
+
+
+    /*方位をみて制御*/
+    imu::Quaternion q_orientation_now = bno.getQuat();
+    q_orientation_now.normalize();//重力分を取り除く（vector.h）
+    imu::Vector<3> e_orientation_now = q_orientation_now.toEuler();
+    float angleNow = radPI * e_orientation_now.z();
 }
 
 void GuideDIST() {
@@ -138,16 +152,15 @@ bool isMoving() {
     return isMoving;
 }
 
-double Distance() {
+float Distance() {
     /*
     距離(cm)を返す
     一応，九軸センサー内蔵の温度センサーで温度を見て，校正しているが，だめっぽかったら15℃として計算してる
     これは, ambient temperature なのか， sensor temperatureなのか，よくわからん（データーシートにも混在）→実験してみる
+    メモリ節約のため，25度で計算
     */
-    int Duration, temp = bno.getTemp();
-    double Distance;
-    pinMode(PIN_DIST_TRIG, OUTPUT);
-    pinMode(PIN_DIST_ECHO, INPUT);
+    int Duration;
+    float Distance;
 
     digitalWrite(PIN_DIST_TRIG, HIGH);
     delayMicroseconds(10);
@@ -155,16 +168,18 @@ double Distance() {
 
     Duration = pulseIn(PIN_DIST_ECHO, HIGH, 23200);//400cm以上の場合0を返す
     if (Duration > 0) {
-        if (temp > 5) {
-            Distance = Duration * (0.6 * temp + 331.5) / 20000;
-            // D(cm) = T(μS) × 1/2(片道) × 340(m/s) × 100(cm/m) × 1/1000000(μS/S)
-            // https://nobita-rx7.hatenablog.com/entry/27884818
-            // D = T * 0.00005 * c(m/s) = T / 20000
-            // c(近似) = 0.6 * temp + 331.5　
-        } else {
-            Distance = Duration / 58.8;// 15℃ 1013hpa
-            // D = T * 0.017 = T / 58.8
-        }
+        //Distance = Duration * (0.6 * temp + 331.5) / 20000;
+        // D(cm) = T(μS) × 1/2(片道) × 340(m/s) × 100(cm/m) × 1/1000000(μS/S)
+        // https://nobita-rx7.hatenablog.com/entry/27884818
+        // D = T * 0.00005 * c(m/s) = T / 20000
+        // c(近似) = 0.6 * temp + 331.5　
+
+        //Distance = Duration / 58.8;// 15℃ 1013hpa
+        // D = T * 0.017 = T / 58.8
+
+        Distance = Duration / 57.6;
+        // 25度の音速346.75(m/s)なので347として計算
+        // D = T * 0.01735 = T / 57.6
     } else {
         Distance = 400;
     }
