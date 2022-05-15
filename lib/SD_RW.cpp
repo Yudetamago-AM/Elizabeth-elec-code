@@ -1,5 +1,10 @@
 #include "SD_RW.h"
 
+String fileName;
+int countFileName;
+bool countlog = false;
+bool countgpslog = false;
+
 void sd_init() {
     pinMode(PIN_SD_CS, OUTPUT);
     //起動する度，新しい名前のファイル作る（連番）
