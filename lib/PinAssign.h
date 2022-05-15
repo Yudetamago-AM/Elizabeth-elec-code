@@ -45,4 +45,7 @@ SCL A5
 /*ニクロム線*/
 #define PIN_NICHROME 7
 
+/*定数*/
+#define RADPI 57.2957795131
+
 #endif

@@ -14,7 +14,5 @@ void motor_foward(byte pwmR, byte pwmL);
 //void motor_back(int pwm); //使わない
 void motor_rotate(int angle, float angleNow); //正面を0として±180度
 void motor_stop();
-/*定数*/
-//const int radPI 57.2957795131;
 
 #endif
