@@ -20,8 +20,11 @@ https://github.com/adafruit/Adafruit_BNO055
 #include <SD_RW.h>
 
 byte phase = 0;
-/*重要！！タイマー！！ミリ秒単位で指定*/
+/*重要！！電源オンからのタイマー，ミリ秒単位で指定*/
 unsigned long Timer = 600000; //600 * 1000, 600秒 は 10分
+/*重要！！ゴールのGPS座標*/
+const float goal_longitude = 140.026945; //経度
+const float goal_latitude = 40.211944; //緯度
 
 GPS_MTK333X_Serial GPS;
 Adafruit_BNO055 bno = Adafruit_BNO055(55);
@@ -51,7 +54,7 @@ void setup() {
     Serial.println(F("BNO055 ready"));
 
     /*GPS initialize*/
-    while (!GPS.begin()) {
+    while (!GPS.begin(9600)) {
         Serial.println(F("GPS not ready"));
         delay(100);
     }
@@ -96,18 +99,47 @@ void Landing() {
         /*ニクロム線のカット*/
         digitalWrite(PIN_NICHROME, HIGH);
     }
+    phase = 1;
 }
 
 /*guide to the goal using GPS*/
 void GuideGPS() {
-    /*方位・距離を計算*/
+    //方位・距離を計算
+    const unsigned long R = 6376008;//能代市役所から，地球の中心までの距離
+    double direction, distance, angle;//方位，距離，角度の差
+    
+    if (GPS.check() && GPS.isTimeUpdate()) {
+        double dx, dy;//x, yの変位
+        GPSInfo_t gpsInfo = GPS.value();
+        dx = R * (goal_longitude - (gpsInfo.longitude / 600000.0)) * cos(goal_latitude);
+        dy = R * (goal_latitude - (gpsInfo.latitude / 600000.0));
+        direction = atan2(dy, dx);
+        distance = sqrt(pow(dx, 2) + pow(dy, 2));
+    }
 
-
-    /*方位をみて制御*/
+    //ゴールまで4m以内なら，精密誘導へ
+    if (distance <= 4) {
+        phase = 2;
+        return;
+    }
+    
+    //方位をみて制御
     imu::Quaternion q_orientation_now = bno.getQuat();
     q_orientation_now.normalize();//重力分を取り除く（vector.h）
     imu::Vector<3> e_orientation_now = q_orientation_now.toEuler();
-    float angleNow = radPI * e_orientation_now.z();
+    angle = e_orientation_now[0] - direction;
+
+    bool isPlus = false; //trueなら正，falseなら負
+    if (angle > isPlus) isPlus = true;
+
+    angle = abs(angle);
+    if (angle <= 0.26) motor_foward(255, 255); //だいたい15度
+    else if (angle <= 1.3 && isPlus) motor_foward(178, 255);//だいたい75度，ゴールが右手，出70%くらい
+    else if (angle <= 1.3) motor_foward(255, 178);
+    else if (angle <= 3.14 && isPlus) motor_foward(76, 255);
+    else if (angle <= 3.14) motor_foward(255, 75);
+    
+    delay(2000);
 }
 
 void GuideDIST() {
