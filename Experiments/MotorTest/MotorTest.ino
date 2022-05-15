@@ -4,7 +4,7 @@
 
 
 void setup() {
-
+    motor_init();
 }
 
 void loop() {
