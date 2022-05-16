@@ -62,7 +62,7 @@ void motor_foward_d(int distance) {
 */
 
 /*Rotate to the ABSOLUTE angle (in euler)*/
-void motor_rotate(int angle, float angleNow) {
+void motor_rotate(float angle, float angleNow) {
     /*旋回速度，実験で決定する*/
     byte rotatePWM = 60;
     /*
