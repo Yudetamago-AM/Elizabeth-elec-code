@@ -96,6 +96,8 @@ void loop() {
     //フライトピン
     if (PIN_FLIGHT == LOW) flightPinMillis = millis();
 
+    //GPS受信バッファあふれ防止
+    GPS.check();
     switch (phase)
     {
     case 0:
@@ -129,17 +131,17 @@ void GuideGPS() {
     const unsigned long R = 6376008;//能代市役所から，地球の中心までの距離
     double direction, distance, angle;//方位，距離，角度の差
     
-    if (GPS.check() && GPS.isTimeUpdate()) {
+    if (GPS.check() && GPS.isLocationUpdate()) {
         double dx, dy;//x, yの変位
-        GPSInfo_t gpsInfo = GPS.value();
-        dx = R * (goal_longitude - (gpsInfo.longitude / 600000.0)) * cos(goal_latitude);
-        dy = R * (goal_latitude - (gpsInfo.latitude / 600000.0));
+        dx = R * (goal_longitude - (GPS.longitude() / 600000.0)) * cos(goal_latitude);
+        dy = R * (goal_latitude - (GPS.latitude() / 600000.0));
         direction = atan2(dy, dx);
         distance = sqrt(pow(dx, 2) + pow(dy, 2));
     }
 
     //ゴールまで4m以内なら，精密誘導へ
     if (distance <= 4) {
+        motor_stop();
         phase = 2;
         return;
     }
@@ -168,13 +170,15 @@ void GuideDIST() {
     for (i = 0; i < 18; i++) {
         dist[i] = Distance() / 2;//2cm単位 
         motor_rotate(0.17, getRadZ());
-        delay(50);
+        delay(100);
+        motor_stop();//これは吉と出るか凶と出るか…要実験！！
     }
     for (i = 0; i < 18; i++) {
         if((dist[i] < 200) && (abs(dist[i] - dist[i - 1]) < 10)) {
             motor_rotate(0.17 * (18 - i), getRadZ());
             motor_foward(178, 178);
             delay(3000);
+            motor_stop();
         }
     }
 
