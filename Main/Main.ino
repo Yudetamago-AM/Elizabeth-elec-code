@@ -44,6 +44,15 @@ void setup() {
     Serial.begin(9600);
     Serial.println(F("Serial begin"));
 
+    /*FOR DEBUG!! mem check*/
+    /*不要なときはコメントアウト！！*/
+    // 5/16時点で723bytesあまってる感じ
+    /*
+    Serial.print(F("Free memory="));
+    Serial.print(freeRam(), DEC);
+    Serial.println(F("[bytes]"));
+    */
+
     /*SD initialize*/
     while (!SD.begin(PIN_SD_CS)){
         Serial.println(F("SD not ready"));
@@ -253,3 +262,13 @@ float Distance() {
     }
     return Distance;
 }
+
+/*FOR DEBUG!!*/
+/*ローカル変数のメモリもみてみる*/
+/*
+int freeRam () {
+  extern int __heap_start, *__brkval;
+  int v;
+  return (int) &v - (__brkval == 0 ? (int) &__heap_start : (int) __brkval);
+}
+*/
