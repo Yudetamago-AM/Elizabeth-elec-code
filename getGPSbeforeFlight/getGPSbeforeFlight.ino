@@ -6,9 +6,12 @@
 
 #include <Arduino.h>
 #include <Wire.h>
-#include <GPS_MTK333X_I2C.h>
+#include <GPS_MTK333X_Serial.h>
+//#include <SoftwareSerial.h>
+//#include <GPS_MTK333X_SoftwareSerial.h>
+//GPS_MTK333X_SoftwareSerial GPS(PIN_GPS_RX, PIN_GPS_TX);
 
-GPS_MTK333X_I2C GPS;
+GPS_MTK333X_Serial GPS;
 
 void setup() {
     Serial.begin(9600);

@@ -9,10 +9,9 @@ digitalWrite(PIN_NICHROME, HIGH);
 とすれば，digital pin 7がHIGHになります．
 */
 
-/*
-GPS
-標準のI2Cバス（TX:0, RX:1）
-*/
+/*GPS，ソフトウェアシリアルならつかう*/
+//#define PIN_GPS_TX A3
+//#define PIN_GPS_RX A2
 
 /*9軸センサー*/
 /*
