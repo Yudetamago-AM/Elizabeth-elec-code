@@ -7,28 +7,35 @@
 #include <Arduino.h>
 #include <Wire.h>
 #include <GPS_MTK333X_Serial.h>
-//#include <SoftwareSerial.h>
-//#include <GPS_MTK333X_SoftwareSerial.h>
-//GPS_MTK333X_SoftwareSerial GPS(PIN_GPS_RX, PIN_GPS_TX);
+#include <SoftwareSerial.h>
+#include <GPS_MTK333X_SoftwareSerial.h>
 
-GPS_MTK333X_Serial GPS;
+GPS_MTK333X_SoftwareSerial GPS(PIN_GPS_RX, PIN_GPS_TX);
+
+//GPS_MTK333X_Serial GPS;
 
 void setup() {
     Serial.begin(9600);
     Serial.println(F("serial begin"));
 
-    while (!GPS.begin(9600)) {
+    while (!GPS.begin(9600)) {//9600
         Serial.println(F("GPS not ready"));
         delay(100);
     }
 
-    // GPS.sendMTKcommand(220, F(",1000"));			// 220 PMTK_API_SET_FIX_CTL (MTK3339)
-    GPS.sendMTKcommand(300, F(",1000,0,0,0,0"));    // 300 PMTK_API_SET_FIX_CTL
-    GPS.sendMTKcommand(225, F(",0"));               // 225 PMTK_SET_PERIODIC_MODE
-    // GPS.sendMTKcommand(353, F(",1,0,0,0,0"));
+    // UARTボーレートを 9600bpsに設定する
+    GPS.sendMTKcommand(251, F(",9600"));
+    // 500ms間隔で NMEAを出力する
+    GPS.sendMTKcommand(220, F(",500"));//500msごとで十分かは要検証
+    // AlwaysLocate モード開始 
+    //GPS.sendMTKcommand(225, F(",8"));
+    // 上記を解除してスタンダードモードに遷移
+    GPS.sendMTKcommand(225, F(",0"));
+    // QZSS（みちびき）をサポートする
     GPS.sendMTKcommand(351, F(",1"));
-    GPS.sendMTKcommand(314, F(",0,1,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0"));
-}
+    // RMCとGGAをともに1サイクルで出力する（1サイクル時間は PMTK220 による）
+    // 各項は ",GLL,RMC,VTG,GGA,GSA,GSV,0,0,0,0,0,0,0,0,0,0,0,ZDA,MCHN"
+    GPS.sendMTKcommand(314, F(",0,1,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0"));}
 
 void loop() {
     if (GPS.check() && GPS.isTimeUpdate()) {
