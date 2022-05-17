@@ -143,4 +143,5 @@ void motor_rotate(float angle, float angleNow) {
             analogWrite(PIN_MO_R_A, rotatePWM);
         }
     }
+    motor_stop();
 }
