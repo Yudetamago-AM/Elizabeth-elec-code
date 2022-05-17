@@ -10,9 +10,9 @@ https://github.com/adafruit/Adafruit_BNO055
 
 #include <Arduino.h>
 #include <Wire.h>
-//#include <SoftwareSerial.h>
-//#include <GPS_MTK333X_SoftwareSerial.h>
-#include <GPS_MTK333X_Serial.h>
+#include <SoftwareSerial.h>
+#include <GPS_MTK333X_SoftwareSerial.h>
+//#include <GPS_MTK333X_Serial.h>
 #include <Adafruit_Sensor.h>
 #include <Adafruit_BNO055.h>
 #include <utility/imumaths.h>
@@ -31,8 +31,8 @@ unsigned long flightPinMillis;
 const float goal_longitude = 140.026945; //経度
 const float goal_latitude = 40.211944; //緯度
 
-//GPS_MTK333X_SoftwareSerial GPS(PIN_GPS_RX, PIN_GPS_TX);
-GPS_MTK333X_Serial GPS;
+GPS_MTK333X_SoftwareSerial GPS(PIN_GPS_RX, PIN_GPS_TX);
+//GPS_MTK333X_Serial GPS;
 Adafruit_BNO055 bno = Adafruit_BNO055(55);
 
 void setup() {
@@ -119,6 +119,10 @@ void loop() {
     case 3:
         Goal();
         break;
+    case 4://ゴール後
+        GPS.check();
+        delay(10000);
+        break;
     }
 }
 
@@ -135,18 +139,10 @@ void Landing() {
 /*guide to the goal using GPS*/
 void GuideGPS() {
     //方位・距離を計算
-    const unsigned long R = 6376008;//能代市役所から，地球の中心までの距離
     double direction, distance, angle;//方位，距離，角度の差
     
-    if (GPS.check() && GPS.isLocationUpdate()) {
-        GPS.statusReset();
-        double dx, dy;//x, yの変位
-        dx = R * (goal_longitude - (GPS.longitude() / 600000.0)) * cos(goal_latitude);
-        dy = R * (goal_latitude - (GPS.latitude() / 600000.0));
-        direction = atan2(dy, dx);
-        distance = sqrt(pow(dx, 2) + pow(dy, 2));
-    }
-
+    getGPS(&direction, &distance);
+    
     //ゴールまで4m以内なら，精密誘導へ
     if (distance <= 4) {
         motor_stop();
@@ -177,13 +173,12 @@ void GuideDIST() {
     motor_rotate(-1.57, getRadZ());
     for (i = 0; i < 18; i++) {
         dist[i] = Distance() / 2;//2cm単位 
-        motor_rotate(0.17, getRadZ());
-        delay(100);
-        motor_stop();//これは吉と出るか凶と出るか…要実験！！
+        motor_rotate(0.175, getRadZ());
+        delay(100);//これは吉と出るか凶と出るか…要実験！！
     }
     for (i = 0; i < 18; i++) {
         if((dist[i] < 200) && (abs(dist[i] - dist[i - 1]) < 10)) {
-            motor_rotate(0.17 * (18 - i), getRadZ());
+            motor_rotate(0.175 * (18 - i), getRadZ());
             motor_foward(178, 178);
             delay(3000);
             motor_stop();
@@ -194,16 +189,24 @@ void GuideDIST() {
 }
 
 void Goal() {
+    //5m以内判定
+    bool infivem = false;
+    double direction, distance;
+    getGPS(&direction, &distance);
+    if (distance < 5) infivem = true;
+
     //0m判定
-    bool right, left;
-    if (Distance() < 5) {
+    bool right = false, left = false;
+    if (infivem && Distance() < 5) {
         motor_rotate(0.1, getRadZ());
         if (Distance() < 5) right = true;
         motor_rotate(-0.2, getRadZ());
         if (Distance() < 5) left = true;
     }
-
-
+    if (right && left) {
+        phase = 4;
+        return;
+    }
 }
 
 /*Landing用*/
@@ -222,6 +225,20 @@ float getRadZ() {
     q_orientation_now.normalize();//重力分を取り除く（vector.h）
     imu::Vector<3> e_orientation_now = q_orientation_now.toEuler();
     return e_orientation_now.z();
+}
+
+/*GPSで方位と距離を計算する*/
+double getGPS(double* direction, double* distance) {
+    const unsigned long R = 6376008;//能代市役所から，地球の中心までの距離
+
+    if (GPS.check() && GPS.isLocationUpdate()) {
+        double dx, dy;//x, yの変位
+        dx = R * (goal_longitude - (GPS.longitude() / 600000.0)) * cos(goal_latitude);
+        dy = R * (goal_latitude - (GPS.latitude() / 600000.0));
+        *direction = atan2(dy, dx);
+        *distance = sqrt(pow(dx, 2) + pow(dy, 2));
+        GPS.statusReset();
+    }
 }
 
 /*その他*/
