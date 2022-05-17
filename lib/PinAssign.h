@@ -9,9 +9,9 @@ digitalWrite(PIN_NICHROME, HIGH);
 とすれば，digital pin 7がHIGHになります．
 */
 
-/*GPS，ソフトウェアシリアルならつかう*/
-//#define PIN_GPS_TX A3
-//#define PIN_GPS_RX A2
+/*GPS，ソフトウェアシリアル*/
+#define PIN_GPS_TX A3
+#define PIN_GPS_RX A2
 
 /*9軸センサー*/
 /*
