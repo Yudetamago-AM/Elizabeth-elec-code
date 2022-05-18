@@ -10,8 +10,8 @@ digitalWrite(PIN_NICHROME, HIGH);
 */
 
 /*GPS，ソフトウェアシリアル*/
-#define PIN_GPS_TX A3
-#define PIN_GPS_RX A2
+#define PIN_GPS_TX A2
+#define PIN_GPS_RX A3
 
 /*9軸センサー*/
 /*
