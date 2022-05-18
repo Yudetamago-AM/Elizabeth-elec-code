@@ -167,43 +167,46 @@ void GuideGPS() {
 }
 
 void GuideDIST() {
-    byte dist[18];
-    byte i;
+    byte dist[18], i;//あるいは，印付けてみるとか？
 
     motor_rotate(-1.57, getRadZ());
     for (i = 0; i < 18; i++) {
         dist[i] = Distance() / 2;//2cm単位 
         motor_rotate(0.175, getRadZ());
-        delay(100);//これは吉と出るか凶と出るか…要実験！！
+        delay(10);//これは吉と出るか凶と出るか…要実験！！
     }
     for (i = 0; i < 18; i++) {
         if((dist[i] < 200) && (abs(dist[i] - dist[i - 1]) < 10)) {
             motor_rotate(0.175 * (18 - i), getRadZ());
             motor_foward(178, 178);
-            delay(3000);
+            delay(2000);
             motor_stop();
+            break;
         }
     }
-
     Goal();
 }
 
 void Goal() {
-    //5m以内判定
-    bool infivem = false;
+    //4m以内判定
+    bool gpsComplete = false;
     double direction, distance;
+
     getGPS(&direction, &distance);
-    if (distance < 5) infivem = true;
+    if (distance < 4) {
+        gpsComplete = true;
+        GuideDIST();
+    }
 
     //0m判定
     bool right = false, left = false;
-    if (infivem && Distance() < 5) {
+    if (gpsComplete && (Distance() < 5)) {
         motor_rotate(0.1, getRadZ());
         if (Distance() < 5) right = true;
         motor_rotate(-0.2, getRadZ());
         if (Distance() < 5) left = true;
     }
-    if (right && left) {
+    if (gpsComplete && right && left) {
         phase = 4;
         return;
     }

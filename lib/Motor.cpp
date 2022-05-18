@@ -53,7 +53,7 @@ void motor_foward_d(int distance) {
     foward(110);
 
     if((time + operatingTime) <= millis()) {
-        stop();
+        motor_stop();
     }
     return;
     //ほんとうなら，つど加速度の値と時間を記録しておいて，進んだ距離を推定して，
@@ -64,7 +64,7 @@ void motor_foward_d(int distance) {
 /*Rotate to the ABSOLUTE angle (in euler)*/
 void motor_rotate(float angle, float angleNow) {
     /*旋回速度，実験で決定する*/
-    byte rotatePWM = 60;
+    byte rotatePWM = 100;
     /*
     PIN_MO_L/R_Bはそれぞれ5,6ピンを使っているので，デューティー比が若干高くなるそう（下リファレンス）．
     http://www.musashinodenpa.com/arduino/ref/index.php?f=0&pos=2153
