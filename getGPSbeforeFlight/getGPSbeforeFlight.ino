@@ -6,7 +6,8 @@
 
 #include <Arduino.h>
 #include <Wire.h>
-#include <GPS_MTK333X_Serial.h>
+#include <PinAssign.h>
+//#include <GPS_MTK333X_Serial.h>
 #include <SoftwareSerial.h>
 #include <GPS_MTK333X_SoftwareSerial.h>
 
