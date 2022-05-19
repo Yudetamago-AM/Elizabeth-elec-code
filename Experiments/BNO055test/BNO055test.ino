@@ -23,7 +23,7 @@ void setup() {
 }
 
 void loop() {
-    /*get Quaternion*/
+    /*get Quaternion
     imu::Quaternion quat = bno.getQuat();
     Serial.print("qW: ");
     Serial.print(quat.w(), 4);
@@ -33,26 +33,46 @@ void loop() {
     Serial.print(quat.y(), 4);
     Serial.print(" qZ: ");
     Serial.print(quat.z(), 4);
-    Serial.print("\t\t");
+    Serial.println("\t\t");
+    */
 
-    /*test getRadZ*/
-    double radZ = getRadZ();
-    Serial.print("getRadZ: ");
-    Serial.println(radZ, 10);
-    Serial.print(" in deg: ");
-    Serial.println(radZ * RADPI, 10);
+    /*test getRad*/
+    imu::Quaternion q_orientation_now = bno.getQuat();
+    q_orientation_now.normalize();//重力分を取り除く（vector.h）
+    imu::Vector<3> e_orientation_now = q_orientation_now.toEuler();
+    
+    Serial.println("orientation: ");
+    Serial.print(" x: ");
+    Serial.println(e_orientation_now.x() * RADPI, 10);
+    Serial.print(" y: ");
+    Serial.println(e_orientation_now.y() * RADPI, 10);
+    Serial.print(" z: ");
+    Serial.println(e_orientation_now.z() * RADPI, 10);
+    Serial.println("");
 
     /*test accel;*/
     sensors_event_t accelData;
-    bno.getEvent(&accelData);
-    Serial.print("x: ");
-    Serial.print(accelData.acceleration.x(), 6);
+    bno.getEvent(&accelData, Adafruit_BNO055::VECTOR_LINERACCEL);
+    //VECTOR_ACCELEROMETERだと，重力加速度も入ってる．
+    Serial.println("Accel:");
+    Serial.print(" x: ");
+    Serial.println(accelData.acceleration.x, 6);
     Serial.print(" y: ");
-    Serial.print(accelData.acceleration.y(), 6);
+    Serial.println(accelData.acceleration.y, 6);
     Serial.print(" z: ");
-    Serial.println(accelData.acceleration.z(), 6);
+    Serial.println(accelData.acceleration.z, 6);
+    /*
+    imu::Vector<3> accelData = bno.getVector(Adafruit_BNO055::VECTOR_LINERACCEL);
+    Serial.println("accel:");
+    Serial.print("x: ");
+    Serial.print(accelData.x(), 6);
+    Serial.print(" y: ");
+    Serial.print(accelData.y(), 6);
+    Serial.print(" z: ");
+    Serial.println(accelData.z(), 6);
+    */
 
-    /* Display calibration status for each sensor. */
+    /* Display calibration status for each sensor. 
     uint8_t system, gyro, accel, mag = 0;
     bno.getCalibration(&system, &gyro, &accel, &mag);
     Serial.print("CALIBRATION: Sys=");
@@ -63,14 +83,12 @@ void loop() {
     Serial.print(accel, DEC);
     Serial.print(" Mag=");
     Serial.println(mag, DEC);
-
-    /*print temperature*/
+    */
+    
+    /*print temperature
+    //センサーの温度だった
+    Serial.print("temp: ");
     Serial.println(bno.getTemp());
+    */
     delay(1000);
-}
-
-/*z軸の角度(rad)を取得*/
-float getRadZ() {
-    imu::Vector<3> e_orientation_now = bno.getQuat().normalize().toEuler();
-    return e_orientation_now.z();
 }
