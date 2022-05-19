@@ -9,11 +9,12 @@ void setup() {
     /*init*/
     pinMode(PIN_DIST_TRIG, OUTPUT);
     pinMode(PIN_DIST_ECHO, INPUT);
+    digitalWrite(PIN_DIST_TRIG, LOW);
 }
 
 void loop() {
     Serial.println(Distance());
-    delay(250);
+    delay(500);
 }
 
 float Distance() {
