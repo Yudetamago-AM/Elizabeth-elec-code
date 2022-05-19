@@ -54,11 +54,7 @@ void setup() {
     */
 
     /*SD initialize*/
-    while (!SD.begin(PIN_SD_CS)){
-        Serial.println(F("SD not ready"));
-        delay(100);
-    }
-    sd_init();//順序間違えない
+    sd_init();
 
     /*BNO055 initialize*/
     while (!bno.begin()) {
@@ -91,6 +87,7 @@ void setup() {
     /*Distance sensor initialize*/
     pinMode(PIN_DIST_TRIG, OUTPUT);
     pinMode(PIN_DIST_ECHO, INPUT);
+    digitalWrite(PIN_DIST_TRIG, LOW);
     
     /*Motor initialize*/
     motor_init();
