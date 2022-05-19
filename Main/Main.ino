@@ -33,7 +33,7 @@ const float goal_latitude = 40.211944; //緯度
 
 GPS_MTK333X_SoftwareSerial GPS(PIN_GPS_RX, PIN_GPS_TX);
 //GPS_MTK333X_Serial GPS;
-Adafruit_BNO055 bno = Adafruit_BNO055(55);
+Adafruit_BNO055 bno = Adafruit_BNO055(55, 0x28);
 
 void setup() {
     /*ニクロム線の初期設定*/
