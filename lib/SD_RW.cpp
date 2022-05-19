@@ -31,6 +31,7 @@ void sd_log(String text) {
         } else {
             logText.println(String(millis()) + "," + text);
         }
+        logText.close();
     } else {
         Serial.println(F("SD_RW log error"));
     }
@@ -45,6 +46,7 @@ void sd_gpsLog(bcdtime_t bcdtime, int32_t longitude, int32_t latitude, int32_t s
         } else {
             logText.println(String(millis()) + String(bcdtime) + "," + String(longitude) + "," + String(latitude) + "," + String(angle));
         }
+        logText.close();
     } else {
         Serial.println(F("SD_RW gpslog error"));
     }
