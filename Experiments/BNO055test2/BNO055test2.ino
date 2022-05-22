@@ -4,11 +4,7 @@
 #include <utility/imumaths.h>
 /*以下lib内自作ライブラリ*/
 #include <PinAssign.h>
-
-/*
-値安定しない問題はSCLに3.3K, SDAに2.2Kプルアップすることで解決する
-I2Cの時の問題らしい，adafruit bno055のFAQsにある．
-*/
+#include <Motor.h>
 
 Adafruit_BNO055 bno = Adafruit_BNO055(55, 0x28);
 
@@ -41,11 +37,15 @@ void loop() {
     */
 
     /*test getRad*/
-    
+    /*
     imu::Quaternion q_orientation_now = bno.getQuat();
     q_orientation_now.normalize();//重力分を取り除く（vector.h）
     imu::Vector<3> e_orientation_now = q_orientation_now.toEuler();
-    
+    */
+    imu::Vector<3> e_orientation_now;
+    //imu::Quaternion e_orientation_now;
+    getRad(&e_orientation_now);
+
     /*
     Serial.println("orientation: ");
     Serial.print(" x: ");
@@ -65,7 +65,7 @@ void loop() {
     Serial.println(e_orientation_now.z(), 10);
     Serial.println("");
 
-    /*test accel;*/
+    /*test accel;
     sensors_event_t accelData;
     bno.getEvent(&accelData, Adafruit_BNO055::VECTOR_LINEARACCEL);
     //VECTOR_ACCELEROMETERだと，重力加速度も入ってる．
@@ -85,21 +85,7 @@ void loop() {
     Serial.print(accelData.y(), 6);
     Serial.print(" z: ");
     Serial.println(accelData.z(), 6);
-    */
-
-    /* Display calibration status for each sensor. */
-    uint8_t system, gyro, accel, mag = 0;
-    bno.getCalibration(&system, &gyro, &accel, &mag);
-    Serial.print("CALIBRATION: Sys=");
-    Serial.print(system);
-    Serial.print(" Gyro=");
-    Serial.print(gyro);
-    Serial.print(" Accel=");
-    Serial.print(accel);
-    Serial.print(" Mag=");
-    Serial.println(mag);
-    Serial.println("");
-    
+    */ 
     
     /*print temperature
     //センサーの温度だった
@@ -109,6 +95,32 @@ void loop() {
     delay(200);
 }
 
+float getRad(imu::Vector<3>* e_orientation_now) {
+    //止まっているとCalibrationが悪くなるので，だめだったらちょっと動かす用
+    //millisTemp = millis();
+
+    uint8_t system;
+    imu::Quaternion q_orientation_now;
+    
+    do {
+        bno.getCalibration(&system, NULL, NULL, NULL);
+
+        //for debug
+        Serial.print("system: ");
+        Serial.println(system);
+        q_orientation_now = bno.getQuat();
+        /*
+        if (millisTemp + 1000 < millis()) {
+            motor_foward(50, 50);
+            delay(100);
+            motor_stop();
+        }
+        */
+    } while (system < 1);//1, 2，3の時のみループを抜けて出力
+    
+    q_orientation_now.normalize();//重力分を取り除く（vector.h）
+    *e_orientation_now = q_orientation_now.toEuler();
+}
 /*
 //Quaternion
 //Z軸が回転
