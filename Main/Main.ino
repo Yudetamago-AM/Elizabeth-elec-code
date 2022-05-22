@@ -31,6 +31,8 @@ unsigned long flightPinMillis;
 const float goal_longitude = 140.026945; //経度
 const float goal_latitude = 40.211944; //緯度
 
+unsigned long millisTemp = 0;
+
 GPS_MTK333X_SoftwareSerial GPS(PIN_GPS_RX, PIN_GPS_TX);
 //GPS_MTK333X_Serial GPS;
 Adafruit_BNO055 bno = Adafruit_BNO055(55, 0x28);
@@ -148,10 +150,12 @@ void GuideGPS() {
     }
     
     //方位をみて制御
-    angle = getRadZ() - direction;
+    imu::Vector<3> e_orientation_now;
+    getRad(&e_orientation_now);
+    angle = e_orientation_now.x() - direction;
 
     bool isPlus = false; //trueなら正，falseなら負
-    if (angle > isPlus) isPlus = true;
+    if (angle > 0) isPlus = true;
 
     angle = abs(angle);
     if (angle <= 0.26) motor_foward(255, 255); //だいたい15度
@@ -166,15 +170,15 @@ void GuideGPS() {
 void GuideDIST() {
     byte dist[18], i;//あるいは，印付けてみるとか？
 
-    motor_rotate(-1.57, getRadZ());
+    rotate(-1.57);//90度左回転
     for (i = 0; i < 18; i++) {
         dist[i] = Distance() / 2;//2cm単位 
-        motor_rotate(0.175, getRadZ());
+        rotate(0.175);
         delay(10);//これは吉と出るか凶と出るか…要実験！！
     }
     for (i = 0; i < 18; i++) {
         if((dist[i] < 200) && (abs(dist[i] - dist[i - 1]) < 10)) {
-            motor_rotate(0.175 * (18 - i), getRadZ());
+            rotate(0.175 * (18 - i));
             motor_foward(178, 178);
             delay(2000);
             motor_stop();
@@ -198,9 +202,9 @@ void Goal() {
     //0m判定
     bool right = false, left = false;
     if (gpsComplete && (Distance() < 5)) {
-        motor_rotate(0.1, getRadZ());
+        rotate(0.1);
         if (Distance() < 5) right = true;
-        motor_rotate(-0.2, getRadZ());
+        rotate(-0.2);
         if (Distance() < 5) left = true;
     }
     if (gpsComplete && right && left) {
@@ -217,14 +221,6 @@ bool isLanded() {
     else if (!isMoving()) isLanded = true;
     
     return isLanded;
-}
-
-/*z軸の角度(rad)を取得*/
-float getRadZ() {
-    imu::Quaternion q_orientation_now = bno.getQuat();
-    q_orientation_now.normalize();//重力分を取り除く（vector.h）
-    imu::Vector<3> e_orientation_now = q_orientation_now.toEuler();
-    return e_orientation_now.z();
 }
 
 /*GPSで方位と距離を計算する*/
@@ -290,6 +286,115 @@ float Distance() {
         Distance = 400;
     }
     return Distance;
+}
+
+/*Rotate to the ABSOLUTE angle (in euler)*/
+void rotate(float angle) {
+    /*旋回速度，実験で決定する*/
+    const byte rotatePWM = 100;
+    /*
+    PIN_MO_L/R_Bはそれぞれ5,6ピンを使っているので，デューティー比が若干高くなるそう（下リファレンス）．
+    http://www.musashinodenpa.com/arduino/ref/index.php?f=0&pos=2153
+
+    具体的には，5/6ピンから977Hz
+    9/10ピンから490Hz
+    3/11ピンから490Hzという3つがあり，490*2 = 980のためと思われる．
+    （一応）その調整をする．
+    */
+    /*
+    int offsetPWM = 1;//（およそ）1秒(50ms*20)に1回**offsetPWMの値**を引いたPWMでうごかす
+    int count = 0;
+    // メモリないのでやめにした
+    */
+    //いい感じに9軸センサー呼び出す感じ
+    //cf1. https://learn.adafruit.com/adafruit-bno055-absolute-orientation-sensor/arduino-code
+    //cf2. https://forums.adafruit.com/viewtopic.php?f=19&t=91723&p=462337#p462337
+    /*
+    ↑では，
+    sensors_event_t rotate;
+    bno.getEvent(&rotate);
+    みたいに書いてあるが，
+    https://learn.adafruit.com/using-the-adafruit-unified-sensor-driver/how-does-it-work#void-getevent-sensors-event-t-star
+    にあるように，Quternionはgeteventでは取得出来ない（=Raw Sensor Dataとして取得する必要がある）
+    （なんのための"Unified" Sensor Systemだ？？，下手に使えんでないか）
+    */
+    //cf3. http://l52secondary.blog.fc2.com/blog-entry-50.html
+    
+    /*
+    そのままEulerで取得するとpitch(y)かroll(x)軸が±45度を超えると，まともに使えるデータでなくなるから
+    クォータニオンで値を取得してオイラー角に変換する
+    ちなみに，（正）「クォータニオン」（誤）「クォータ二オン」，（誤）はニが2になってる，おのれATOK！
+    */
+
+    /*
+    imu::Quaternion q_orientation_now = bno.getQuat();
+    q_orientation_now.normalize();//重力分を取り除く（vector.h）
+    */
+    imu::Vector<3> e_orientation_now;
+    getRad(&e_orientation_now);
+    float angleNow = e_orientation_now.x();
+
+    /*入れ替え
+    float temp = q_orientation_now.x();
+    q_orientation_now.x() = -q_orientation_now.y();
+    q_orientation_now.y() = temp;
+    q_orientation_now.z() = -q_orientation_now.z();
+    //おそらく不要
+    */
+    /*
+    imu::Vector<3> e_orientation_now = q_orientation_now.toEuler();
+    float angleNow = radPI * e_orientation_now.z();
+    */
+    float destAngle = angle - angleNow;
+    if (destAngle > 0) {
+        while (angleNow <= destAngle) {
+            /*右は後転，左は正転*/
+            digitalWrite(PIN_MO_L_B, LOW);
+            digitalWrite(PIN_MO_R_A, LOW);
+
+            analogWrite(PIN_MO_L_A, rotatePWM);
+            analogWrite(PIN_MO_R_B, rotatePWM);
+
+            getRad(&e_orientation_now);
+            angleNow = e_orientation_now.x();
+        }
+    } else if (destAngle < 0) {
+        while (angleNow <= destAngle) {
+            /*右は正転，左は後転*/
+            digitalWrite(PIN_MO_L_A, LOW);
+            digitalWrite(PIN_MO_R_B, LOW);
+
+            analogWrite(PIN_MO_L_B, rotatePWM);
+            analogWrite(PIN_MO_R_A, rotatePWM);
+
+            getRad(&e_orientation_now);
+            angleNow = e_orientation_now.x();
+        }
+    }
+    motor_stop();
+}
+
+float getRad(imu::Vector<3>* e_orientation_now) {
+    //止まっているとCalibrationが悪くなるので，だめだったらちょっと動かす用
+    millisTemp = millis();
+
+    uint8_t system;
+    imu::Quaternion q_orientation_now;
+    
+    do {
+        bno.getCalibration(&system, NULL, NULL, NULL);
+        q_orientation_now = bno.getQuat();
+        
+        if (millisTemp + 1000 < millis()) {
+            motor_foward(50, 50);
+            delay(100);
+            motor_stop();
+        }
+        
+    } while (system < 1);//1, 2，3の時のみループを抜けて出力
+    
+    q_orientation_now.normalize();//重力分を取り除く（vector.h）
+    *e_orientation_now = q_orientation_now.toEuler();
 }
 
 /*FOR DEBUG!!*/
