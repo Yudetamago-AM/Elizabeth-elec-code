@@ -25,14 +25,14 @@ void sd_init() {
         countFileName++;
     }
     fileName = String(countFileName) + ".csv";
-    Serial.print(F("filename: "));
-    Serial.println(fileName);
+    //Serial.print(F("filename: "));
+    //Serial.println(fileName);
     Serial.println(F("SD ready"));
 }
 
 void sd_log(String text) {
-    File logText = SD.open(fileName, FILE_WRITE);
-    Serial.println("filename: " + fileName);
+    File logText = SD.open("l_" + fileName, FILE_WRITE);
+    //Serial.println("filename: " + fileName);
     if (logText) {
         if (countlog == false) {
             logText.println(F("millis,log"));
