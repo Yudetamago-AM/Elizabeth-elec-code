@@ -17,7 +17,7 @@ void sd_init() {
     //ファイル名は8.3まで（リファレンスより）
     //それをString fileNameに保存する
     countFileName = 0;
-    while (SD.exists(String(countFileName) + ".txt")) {
+    while ((SD.exists("L" + String(countFileName) + ".csv")) || (SD.exists("G" + String(countFileName) + ".csv"))) {
         if (countFileName == 1000) {
             Serial.println(F("too much file exists"));
             break;
@@ -31,16 +31,15 @@ void sd_init() {
 }
 
 void sd_log(String text) {
-    File logText = SD.open("l_" + fileName, FILE_WRITE);
+    File logText = SD.open("L" + fileName, FILE_WRITE);
     //Serial.println("filename: " + fileName);
     if (logText) {
-        if (log_isFirst == true) {
+        if (log_isFirst) {
             logText.println(F("millis,log"));
             sd_log(text);
             log_isFirst = false;
-        } else {
-            logText.println(String(millis()) + "," + text);
         }
+        logText.println(String(millis()) + "," + text);
     } else {
         Serial.println(F("SD_RW log error"));
     }
@@ -48,16 +47,16 @@ void sd_log(String text) {
 }
 
 //メモリ節約のため，ポインタ使って書きなおす
-void sd_gpslog(bcdtime_t* bcdtime, int32_t* longitude, int32_t* latitude, float angle) {//！angleだけポインタじゃない
+void sd_gpslog(String time, String longitude, String latitude, String angle) {
     //あらかじめ1/60000.0しておいたものを入力
-    File logText = SD.open("gps-" + fileName, FILE_WRITE);
+    File logText = SD.open("G" + fileName, FILE_WRITE);
     if (logText) {
-        if (gpslog_isFirst == true) {
+        if (gpslog_isFirst) {
             logText.println(F("millis,bcdtime,longitude,latitude,angle"));
-        } else {
-            logText.println(String(millis()) + "," + String(*bcdtime) + "," + String(*longitude) + "," + String(*latitude) + "," + String(angle));
+            sd_gpslog(time, longitude, latitude, angle);
+            gpslog_isFirst = false;
         }
-        gpslog_isFirst = false;
+        logText.println(String(millis()) + "," + time + "," + longitude + "," + latitude + "," + angle);
     } else {
         Serial.println(F("SD_RW gpslog error"));
     }
