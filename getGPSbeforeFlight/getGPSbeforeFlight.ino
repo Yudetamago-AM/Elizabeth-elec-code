@@ -52,6 +52,9 @@ void loop() {
             Serial.println(gpsInfo.satellites, DEC);
             Serial.println("gpsInfo.dop(bigger means accurate)(DOP):");
             Serial.println(gpsInfo.dop / 100.0);
+            /*
+            小数点以下7桁で1cm精度
+            */
             Serial.println("gpsInfo.latitude(ido)(degree):");
             Serial.println(gpsInfo.latitude / 600000.0, 10);
             Serial.println("gpsInfo.longtitude(keido)(degree):");

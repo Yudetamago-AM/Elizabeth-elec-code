@@ -2,8 +2,8 @@
 
 String fileName;
 int countFileName;
-bool countlog = false;
-bool countgpslog = false;
+bool log_isFirst = true;
+bool gpslog_isFirst = true;
 
 void sd_init() {
     pinMode(PIN_SD_CS, OUTPUT);
@@ -34,34 +34,33 @@ void sd_log(String text) {
     File logText = SD.open("l_" + fileName, FILE_WRITE);
     //Serial.println("filename: " + fileName);
     if (logText) {
-        if (countlog == false) {
+        if (log_isFirst == true) {
             logText.println(F("millis,log"));
             sd_log(text);
+            log_isFirst = false;
         } else {
             logText.println(String(millis()) + "," + text);
         }
-        logText.close();
     } else {
         Serial.println(F("SD_RW log error"));
     }
-    countlog = true;
     logText.close();
 }
-/*
+
 //メモリ節約のため，ポインタ使って書きなおす
-void sd_gpsLog(bcdtime_t bcdtime, int32_t longitude, int32_t latitude, int32_t speed, float angle) {//あらかじめ1/60000.0しておく
+void sd_gpslog(bcdtime_t* bcdtime, int32_t* longitude, int32_t* latitude, float angle) {//！angleだけポインタじゃない
+    //あらかじめ1/60000.0しておいたものを入力
     File logText = SD.open("gps-" + fileName, FILE_WRITE);
     if (logText) {
-        if (countgpslog == false) {
+        if (gpslog_isFirst == true) {
             logText.println(F("millis,bcdtime,longitude,latitude,angle"));
         } else {
-            logText.println(String(millis()) + String(bcdtime) + "," + String(longitude) + "," + String(latitude) + "," + String(angle));
+            logText.println(String(millis()) + "," + String(*bcdtime) + "," + String(*longitude) + "," + String(*latitude) + "," + String(angle));
         }
-        logText.close();
+        gpslog_isFirst = false;
     } else {
         Serial.println(F("SD_RW gpslog error"));
     }
-    countgpslog = true;
     logText.close();
 }
 */
