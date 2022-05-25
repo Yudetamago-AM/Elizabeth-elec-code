@@ -28,8 +28,8 @@ const unsigned long Timer = 600000; //600 * 1000, 600秒 は 10分
 const unsigned int flightPinTimer = 50000;//50s
 unsigned long flightPinMillis;
 /*重要！！ゴールのGPS座標*/
-const float goal_longitude = 140.026945; //経度
-const float goal_latitude = 40.211944; //緯度
+const double goal_longitude = 140.026945; //経度
+const double goal_latitude = 40.211944; //緯度
 
 unsigned long millisTemp = 0;
 
@@ -139,8 +139,10 @@ void Landing() {
 void GuideGPS() {
     //方位・距離を計算
     double direction, distance, angle;//方位，距離，角度の差
-    
-    getGPS(&direction, &distance);
+    imu::Vector<3> e_orientation_now;
+    getRad(&e_orientation_now);
+
+    getGPS(&direction, &distance, &e_orientation_now);
     
     //ゴールまで4m以内なら，精密誘導へ
     if (distance <= 4) {
@@ -150,8 +152,6 @@ void GuideGPS() {
     }
     
     //方位をみて制御
-    imu::Vector<3> e_orientation_now;
-    getRad(&e_orientation_now);
     angle = e_orientation_now.x() - direction;
 
     bool isPlus = false; //trueなら正，falseなら負
@@ -224,15 +224,20 @@ bool isLanded() {
 }
 
 /*GPSで方位と距離を計算する*/
-double getGPS(double* direction, double* distance) {
+double getGPS(double* direction, double* distance, imu::Vector<3>* e_orientation_now) {
     const unsigned long R = 6376008;//能代市役所から，地球の中心までの距離
 
     if (GPS.check() && GPS.isLocationUpdate()) {
         double dx, dy;//x, yの変位
-        dx = R * (goal_longitude - (GPS.longitude() / 600000.0)) * cos(goal_latitude);
-        dy = R * (goal_latitude - (GPS.latitude() / 600000.0));
+        double longitude = GPS.longitude();
+        double latitude = GPS.latitude();
+        //計算
+        dx = R * (goal_longitude - (longitude / 600000.0)) * cos(goal_latitude);
+        dy = R * (goal_latitude - (latitude / 600000.0));
         *direction = atan2(dy, dx);
         *distance = sqrt(pow(dx, 2) + pow(dy, 2));
+        //ログ
+        sd_gpslog(GPS.time(), &longitude, &latitude, e_orientation_now.x())
         GPS.statusReset();
     }
 }
@@ -254,7 +259,7 @@ bool isMoving() {
     return isMoving;
 }
 
-float Distance() {
+double Distance() {
     /*
     距離(cm)を返す
     一応，九軸センサー内蔵の温度センサーで温度を見て，校正しているが，だめっぽかったら15℃として計算してる
@@ -262,7 +267,7 @@ float Distance() {
     ！！メモリ節約のため，25度で計算
     */
     int Duration;
-    float Distance;
+    double Distance;
 
     digitalWrite(PIN_DIST_TRIG, HIGH);
     delayMicroseconds(10);
@@ -289,7 +294,7 @@ float Distance() {
 }
 
 /*Rotate to the ABSOLUTE angle (in euler)*/
-void rotate(float angle) {
+void rotate(double angle) {
     /*旋回速度，実験で決定する*/
     const byte rotatePWM = 100;
     /*
@@ -332,10 +337,10 @@ void rotate(float angle) {
     */
     imu::Vector<3> e_orientation_now;
     getRad(&e_orientation_now);
-    float angleNow = e_orientation_now.x();
+    double angleNow = e_orientation_now.x();
 
     /*入れ替え
-    float temp = q_orientation_now.x();
+    double temp = q_orientation_now.x();
     q_orientation_now.x() = -q_orientation_now.y();
     q_orientation_now.y() = temp;
     q_orientation_now.z() = -q_orientation_now.z();
@@ -343,9 +348,9 @@ void rotate(float angle) {
     */
     /*
     imu::Vector<3> e_orientation_now = q_orientation_now.toEuler();
-    float angleNow = radPI * e_orientation_now.z();
+    double angleNow = radPI * e_orientation_now.z();
     */
-    float destAngle = angle - angleNow;
+    double destAngle = angle - angleNow;
     if (destAngle > 0) {
         while (angleNow <= destAngle) {
             /*右は後転，左は正転*/
@@ -374,7 +379,7 @@ void rotate(float angle) {
     motor_stop();
 }
 
-float getRad(imu::Vector<3>* e_orientation_now) {
+double getRad(imu::Vector<3>* e_orientation_now) {
     //止まっているとCalibrationが悪くなるので，だめだったらちょっと動かす用
     millisTemp = millis();
 

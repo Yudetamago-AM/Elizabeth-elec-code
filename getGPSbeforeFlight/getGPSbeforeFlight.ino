@@ -37,7 +37,8 @@ void setup() {
     GPS.sendMTKcommand(351, F(",1"));
     // RMCとGGAをともに1サイクルで出力する（1サイクル時間は PMTK220 による）
     // 各項は ",GLL,RMC,VTG,GGA,GSA,GSV,0,0,0,0,0,0,0,0,0,0,0,ZDA,MCHN"
-    GPS.sendMTKcommand(314, F(",0,1,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0"));}
+    GPS.sendMTKcommand(314, F(",0,1,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0"));
+}
 
 void loop() {
     if (GPS.check() && GPS.isTimeUpdate()) {
