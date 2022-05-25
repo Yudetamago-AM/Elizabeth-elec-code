@@ -21,8 +21,8 @@ SCL A5
 */
 
 /*距離センサー*/
-#define PIN_DIST_ECHO 3
-#define PIN_DIST_TRIG 4
+#define PIN_DIST_ECHO 2
+#define PIN_DIST_TRIG 3
 
 /*SDカード*/
 #define PIN_SD_CS 8

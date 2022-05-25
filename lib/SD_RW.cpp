@@ -63,7 +63,7 @@ void sd_gpslog(bcdtime_t* bcdtime, int32_t* longitude, int32_t* latitude, float 
     }
     logText.close();
 }
-*/
+
 /*
 認識：自分の地点（gpsLog()），目標地点(log())
 制御：方角（），距離（）→GuideGPS，GuideDISTを書くときに，ついでに書く
