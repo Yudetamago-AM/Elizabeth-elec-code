@@ -10,6 +10,7 @@
 #include <PinAssign.h>
 #include <SD_RW.h>
 
+//ゴールの経緯度，とりあえず奈良市役所にしている
 const double goal_longitude = 135.80472222; //経度
 const double goal_latitude = 34.68499999; //緯度
 unsigned long millisTemp = 0;
@@ -32,10 +33,10 @@ void setup() {
         delay(100);
     }
     // UARTボーレートを 9600bpsに設定する
-    //GPS.sendMTKcommand(251, F(",9600"));
+    GPS.sendMTKcommand(251, F(",9600"));
     // 1000ms間隔で NMEAを出力する
-    //GPS.sendMTKcommand(220, F(",1000"));//1000msごとで十分かは要検証
-    GPS.sendMTKcommand(300, F(",1000,0,0,0,0"));
+    GPS.sendMTKcommand(220, F(",200"));//1000msごとで十分かは要検証→明らかに不十分であった
+    //GPS.sendMTKcommand(300, F(",200,0,0,0,0"));
     // AlwaysLocate モード開始 
     //GPS.sendMTKcommand(225, F(",8"));
     // 上記を解除してスタンダードモードに遷移
@@ -62,54 +63,56 @@ void setup() {
     }
 
     Serial.println(F("log done!"));
-
-    imu::Vector<3> e_orientation_now;
-
-    while(!(GPS.check() && GPS.isLocationUpdate())){}//GPSが位置情報吐くようになるまで待つ．
-    for (i = 0; i < 5; i++){
-        double direction, distance;
-        Serial.print("i: ");
-        Serial.println(i);
-        getGPS(&direction, &distance);
-        delay(50);
-        Serial.print("direction: ");
-        Serial.println(direction);
-        Serial.print("distance: ");
-        Serial.println(distance);
-        delay(1000);
-    }
-    Serial.println(F("gps log done!"));
 }
 
 void loop(){
+    imu::Vector<3> e_orientation_now;
+    /*
+    getGPS(&direction, &distance);
+    delay(50);
+    Serial.print(F("direction: "));
+    Serial.println(direction);
+    Serial.print(F("distance: "));
+    Serial.println(distance);
+    */
+
+    //ログ
+    if (GPS.check() && GPS.isLocationUpdate() && GPS.isTimeUpdate()) {
+        /*
+        getRad(&e_orientation_now);
+        Serial.print(F("x orientation: "));
+        Serial.println(e_orientation_now.x());
+        */
+        //sd_log("G: " + String(GPS.time()));
+        //delay(20);
+        sd_gpslog(String(GPS.longitude() / 600000.0, 7), String(GPS.latitude() / 600000.0, 7), String(1));
+        delay(50);
+        Serial.println(F("gps logged!"));
+    }
+    delay(500);
+    
 }
 
-/*GPSで方位と距離を計算する*/
+/*GPSで方位と距離を計算する
 //Main.inoより
 double getGPS(double* direction, double* distance) {
     const unsigned long R = 6376008;//能代市役所から，地球の中心までの距離
+    imu::Vector<3> e_orientation_now;
 
+    GPS.statusReset();
     if (GPS.check() && GPS.isLocationUpdate()) {
         double dx, dy;//x, yの変位
-        Serial.println("gps updated (getGPS)");
+        Serial.println(F("gps updated (getGPS)"));
 
         //計算
         dx = R * (goal_longitude - (GPS.longitude() / 600000.0)) * cos(goal_latitude);
         dy = R * (goal_latitude - (GPS.latitude() / 600000.0));
         *direction = atan2(dy, dx);
         *distance = sqrt(pow(dx, 2) + pow(dy, 2));
-        Serial.println("calc done (getGPS)");
-
-        //ログ
-        imu::Vector<3> e_orientation_now;
-        getRad(&e_orientation_now);
-        Serial.print("x orientation (getGPS): ");
-        Serial.println(e_orientation_now.x());
-        sd_gpslog(String(GPS.time(), HEX), String(GPS.longitude()), String(GPS.latitude()), String(e_orientation_now.x()));
-        delay(50);
+        Serial.println(F("calc done (getGPS)"));
     }
-    GPS.statusReset();
 }
+*/
 
 double getRad(imu::Vector<3>* e_orientation_now) {
     //止まっているとCalibrationが悪くなるので，だめだったらちょっと動かす用

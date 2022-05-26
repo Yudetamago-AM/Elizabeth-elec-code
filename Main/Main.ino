@@ -174,13 +174,19 @@ void GuideDIST() {
     for (i = 0; i < 18; i++) {
         dist[i] = Distance() / 2;//2cm単位 
         rotate(0.175);
-        delay(10);//これは吉と出るか凶と出るか…要実験！！
+        delay(10);
     }
     for (i = 0; i < 18; i++) {
-        if((dist[i] < 200) && (abs(dist[i] - dist[i - 1]) < 10)) {
+        if((dist[i] < 200) && (abs(dist[i] - dist[i - 1]) < 5)) {
+            //ログ
+            sd_log("d-d: " + String(i));//distance direction
+            sd_log("d: " + String(dist[i]));
+
+            //制御
             rotate(0.175 * (18 - i));
+            delay(10);
             motor_foward(178, 178);
-            delay(2000);
+            delay(5000);
             motor_stop();
             break;
         }

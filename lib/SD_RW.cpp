@@ -2,8 +2,8 @@
 
 String fileName;
 int countFileName;
-bool log_isFirst = true;
-bool gpslog_isFirst = true;
+static bool log_isFirst;
+static bool gpslog_isFirst;
 
 void sd_init() {
     pinMode(PIN_SD_CS, OUTPUT);
@@ -27,6 +27,9 @@ void sd_init() {
     fileName = String(countFileName) + ".csv";
     //Serial.print(F("filename: "));
     //Serial.println(fileName);
+
+    log_isFirst = true;
+    gpslog_isFirst = true;
     Serial.println(F("SD ready"));
 }
 
@@ -47,16 +50,16 @@ void sd_log(String text) {
 }
 
 //メモリ節約のため，ポインタ使って書きなおす
-void sd_gpslog(String time, String longitude, String latitude, String angle) {
+void sd_gpslog(String longitude, String latitude, String angle) {
     //あらかじめ1/60000.0しておいたものを入力
     File logText = SD.open("G" + fileName, FILE_WRITE);
     if (logText) {
         if (gpslog_isFirst) {
-            logText.println(F("millis,bcdtime,longitude,latitude,angle"));
-            sd_gpslog(time, longitude, latitude, angle);
+            logText.println(F("millis,longitude,latitude,angle"));
+            sd_gpslog(longitude, latitude, angle);
             gpslog_isFirst = false;
         }
-        logText.println(String(millis()) + "," + time + "," + longitude + "," + latitude + "," + angle);
+        logText.println(String(millis()) + "," + longitude + "," + latitude + "," + angle);
     } else {
         Serial.println(F("SD_RW gpslog error"));
     }
@@ -65,6 +68,6 @@ void sd_gpslog(String time, String longitude, String latitude, String angle) {
 
 /*
 認識：自分の地点（gpsLog()），目標地点(log())
-制御：方角（），距離（）→GuideGPS，GuideDISTを書くときに，ついでに書く
+制御：方角（），距離（）→GuideGPS→書いた，概ねOK？，GuideDISTにも書いておく．
 動作：制御との一致→
 */
