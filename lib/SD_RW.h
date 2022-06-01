@@ -10,6 +10,6 @@
 
 void sd_init();
 void sd_log(String text);
-void sd_gpslog(String longitude, String latitude, String angle);
+void sd_gpslog(long longitude, long latitude, float angle);
 
 #endif

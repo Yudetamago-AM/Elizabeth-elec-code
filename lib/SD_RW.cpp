@@ -49,9 +49,8 @@ void sd_log(String text) {
     logText.close();
 }
 
-//メモリ節約のため，ポインタ使って書きなおす
-void sd_gpslog(String longitude, String latitude, String angle) {
-    //あらかじめ1/60000.0しておいたものを入力
+void sd_gpslog(long longitude, long latitude, float angle) {
+    //あらかじめ1/60000しておいたものを入力
     File logText = SD.open("G" + fileName, FILE_WRITE);
     if (logText) {
         if (gpslog_isFirst) {
@@ -59,7 +58,8 @@ void sd_gpslog(String longitude, String latitude, String angle) {
             sd_gpslog(longitude, latitude, angle);
             gpslog_isFirst = false;
         }
-        logText.println(String(millis()) + "," + longitude + "," + latitude + "," + angle);
+        logText.println(String(millis()) + "," + longitude + "," + latitude + "," + String(angle, 4));
+        //https://stackoverflow.com/questions/23936246/error-invalid-operands-of-types-const-char-35-and-const-char-2-to-binar
     } else {
         Serial.println(F("SD_RW gpslog error"));
     }
