@@ -37,7 +37,8 @@ void setup() {
     GPS.sendMTKcommand(351, F(",1"));
     // RMCとGGAをともに1サイクルで出力する（1サイクル時間は PMTK220 による）
     // 各項は ",GLL,RMC,VTG,GGA,GSA,GSV,0,0,0,0,0,0,0,0,0,0,0,ZDA,MCHN"
-    GPS.sendMTKcommand(314, F(",0,1,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0"));}
+    GPS.sendMTKcommand(314, F(",0,1,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0"));
+}
 
 void loop() {
     if (GPS.check() && GPS.isTimeUpdate()) {
@@ -52,6 +53,9 @@ void loop() {
             Serial.println(gpsInfo.satellites, DEC);
             Serial.println("gpsInfo.dop(bigger means accurate)(DOP):");
             Serial.println(gpsInfo.dop / 100.0);
+            /*
+            小数点以下7桁で1cm精度
+            */
             Serial.println("gpsInfo.latitude(ido)(degree):");
             Serial.println(gpsInfo.latitude / 600000.0, 10);
             Serial.println("gpsInfo.longtitude(keido)(degree):");
