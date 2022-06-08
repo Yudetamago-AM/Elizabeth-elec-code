@@ -14,8 +14,8 @@
 //ゴールの経緯度
 //テストのため，知真館2号館をゴールとしている
 //固定小数点に！
-const long goal_longitude = 81463120; //経度*600000
-const long goal_latitude = 20880170; //緯度*600000
+const long goal_longitude = 81463122; //経度*600000(60万)
+const long goal_latitude = 20880173; //緯度*600000
 unsigned long millisTemp = 0;
 
 GPS_MTK333X_SoftwareSerial GPS(PIN_GPS_RX, PIN_GPS_TX);
@@ -102,7 +102,6 @@ void loop(){
 }
 
 /*GPSで方位と距離を計算する*/
-//Main.inoより
 double getGPS(double* direction, double* distance) {
     const unsigned long R = 6376008;//能代市役所から，地球の中心までの距離
     imu::Vector<3> e_orientation_now;
@@ -119,7 +118,7 @@ double getGPS(double* direction, double* distance) {
 
         //計算
         
-        dx = R * (goal_longitude - GPS.longitude()) * cos(goal_latitude) * 100;
+        dx = R * (goal_longitude - GPS.longitude()) * int(cos(goal_latitude) * 100);
         Serial.print(F("dx: "));
         Serial.println(dx);
         
@@ -128,12 +127,13 @@ double getGPS(double* direction, double* distance) {
         Serial.println(dy);
 
         *direction = atan2(dy, dx);
-        *distance = sqrt(pow(dx, 2) + pow(dy, 2));
+        *distance = sqrt(pow(dx, 2) + pow(dy, 2)) / 6000000;
         Serial.println(F("calc done (getGPS)"));
 
         //4debug
         start = millis();
         sd_gpslog(GPS.longitude(), GPS.latitude(), e_orientation_now.x());
+        //sd_gpslog(GPS.longitude() / 600000.0, GPS.latitude() / 600000.0, e_orientation_now.x());        
         end = millis() - start;
 
         Serial.print(F("sd write took(ms) : "));//およそ95msかかっていた
@@ -179,7 +179,7 @@ float getRad(imu::Vector<3>* e_orientation_now) {
         */
         if (system >= 1) break;
         else delay(100);
-    } while (system < 0);//1, 2，3の時のみループを抜けて出力
+    } while (system < 1);//1, 2，3の時のみループを抜けて出力
     //一時的にすべての場合にしてみる
     
     q_orientation_now.normalize();//重力分を取り除く（vector.h）

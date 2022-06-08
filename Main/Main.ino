@@ -73,12 +73,13 @@ void setup() {
     }
     // UARTボーレートを 9600bpsに設定する
     GPS.sendMTKcommand(251, F(",9600"));
-    // 500ms間隔で NMEAを出力する
-    GPS.sendMTKcommand(220, F(",500"));//500msごとで十分かは要検証
+    // 1000ms間隔で NMEAを出力する
+    GPS.sendMTKcommand(220, F(",1000"));
+    //GPS.sendMTKcommand(300, F(",1000,0,0,0,0"));
     // AlwaysLocate モード開始 
     //GPS.sendMTKcommand(225, F(",8"));
     // 上記を解除してスタンダードモードに遷移
-    //GPS.sendMTKcommand(225, F(",0"));
+    GPS.sendMTKcommand(225, F(",0"));
     // QZSS（みちびき）をサポートする
     GPS.sendMTKcommand(351, F(",1"));
     // RMCとGGAをともに1サイクルで出力する（1サイクル時間は PMTK220 による）
@@ -229,7 +230,7 @@ bool isLanded() {
     return isLanded;
 }
 
-/*GPSで方位と距離を計算する*/
+/*GPSで方位と距離を計算する
 double getGPS(double* direction, double* distance, imu::Vector<3>* e_orientation_now) {
     const unsigned long R = 6376008;//能代市役所から，地球の中心までの距離
 
@@ -246,6 +247,52 @@ double getGPS(double* direction, double* distance, imu::Vector<3>* e_orientation
         sd_gpslog(GPS.time(), &longitude, &latitude, e_orientation_now.x())
         GPS.statusReset();
     }
+}
+*/
+/*GPSで方位と距離を計算する*/
+double getGPS(double* direction, double* distance) {
+    const unsigned long R = 6376008;//能代市役所から，地球の中心までの距離
+    imu::Vector<3> e_orientation_now;
+    getRad(&e_orientation_now);
+
+    //4debug
+    uint32_t start, end;
+
+    while (true) {
+        if (GPS.check() && GPS.isTimeUpdate() && GPS.isLocationUpdate()) {
+        long dx, dy;//x, yの変位
+        Serial.println(F("gps updated (getGPS)"));
+        //byte tri_goal_latitude = underbyte(goal_latitude);
+
+        //計算
+        
+        dx = R * (goal_longitude - GPS.longitude()) * int(cos(goal_latitude) * 100);
+        Serial.print(F("dx: "));
+        Serial.println(dx);
+        
+        dy = R * (goal_latitude - GPS.latitude()) * 100;
+        Serial.print(F("dy: "));
+        Serial.println(dy);
+
+        *direction = atan2(dy, dx);
+        *distance = sqrt(pow(dx, 2) + pow(dy, 2)) / 6000000;
+        Serial.println(F("calc done (getGPS)"));
+
+        //4debug
+        start = millis();
+        sd_gpslog(GPS.longitude(), GPS.latitude(), e_orientation_now.x());
+        //sd_gpslog(GPS.longitude() / 600000.0, GPS.latitude() / 600000.0, e_orientation_now.x());        
+        end = millis() - start;
+
+        Serial.print(F("sd write took(ms) : "));//およそ95msかかっていた
+        Serial.println(end);
+        break;
+        }
+    }
+
+    
+    Serial.println(F("gps logged!"));
+
 }
 
 /*その他*/
@@ -346,6 +393,9 @@ void rotate(double angle) {
     double angleNow = e_orientation_now.x();
 
     /*入れ替え
+    // x to -y
+    // y to x
+    // z to -z
     double temp = q_orientation_now.x();
     q_orientation_now.x() = -q_orientation_now.y();
     q_orientation_now.y() = temp;
@@ -385,7 +435,7 @@ void rotate(double angle) {
     motor_stop();
 }
 
-double getRad(imu::Vector<3>* e_orientation_now) {
+float getRad(imu::Vector<3>* e_orientation_now) {
     //止まっているとCalibrationが悪くなるので，だめだったらちょっと動かす用
     millisTemp = millis();
 
@@ -394,18 +444,39 @@ double getRad(imu::Vector<3>* e_orientation_now) {
     
     do {
         bno.getCalibration(&system, NULL, NULL, NULL);
+
+        //for debug
+        /*
+        Serial.print("system: ");
+        Serial.println(system);
         q_orientation_now = bno.getQuat();
+        */
         
         if (millisTemp + 1000 < millis()) {
             motor_foward(50, 50);
-            delay(100);
+            delay(500);
             motor_stop();
         }
         
+        if (system >= 1) break;
+        else delay(100);
     } while (system < 1);//1, 2，3の時のみループを抜けて出力
+    //一時的にすべての場合にしてみる
     
     q_orientation_now.normalize();//重力分を取り除く（vector.h）
     *e_orientation_now = q_orientation_now.toEuler();
+}
+
+void stack() {
+    /*あとでちゃんと動くか確かめる*/
+    imu::Vector<3> e_orientation_now;
+
+    getRad(e_orientation_now);
+    while (e_orientatin_now.y() < 0) {
+        if (e_orientation_now.y() > 0.3) break;
+        motor_foward(255, 255);
+    }
+    motor_stop();
 }
 
 /*FOR DEBUG!!*/
