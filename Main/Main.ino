@@ -128,12 +128,26 @@ void loop() {
 
 /*各シークエンス*/
 void Landing() {
-    if (isLanded()) {
+    if ((flightPinMillis + flightPinTimer) <= millis()) {
+       // 前にうごかしたりパラシュート切り離したり…
+        /*ニクロム線のカット*/
+        Nichrome();
+    } else if (Timer);
         // 前にうごかしたりパラシュート切り離したり…
         /*ニクロム線のカット*/
         digitalWrite(PIN_NICHROME, HIGH);
+        NIchrome();
     }
+
     phase = 1;
+}
+void Nichrome(){
+        digitalWrite(PIN_NICHROME, HIGH);
+        delay(2000);
+        motor_forward(178, 178);
+        delay(3000);
+        motor_stop();
+        digitalWrite(PIN_NICHROME,LOW);
 }
 
 /*guide to the goal using GPS*/
