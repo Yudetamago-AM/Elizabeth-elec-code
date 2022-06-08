@@ -28,10 +28,11 @@ const unsigned long Timer = 600000; //600 * 1000, 600秒 は 10分
 const unsigned int flightPinTimer = 50000;//50s
 unsigned long flightPinMillis;
 /*重要！！ゴールのGPS座標*/
-const double goal_longitude = 140.026945; //経度
-const double goal_latitude = 40.211944; //緯度
+const long goal_longitude = 81463122; //経度*600000(60万)
+const long goal_latitude = 20880173; //緯度*600000
 
 unsigned long millisTemp = 0;
+bool isFirstUnplug = true;
 
 GPS_MTK333X_SoftwareSerial GPS(PIN_GPS_RX, PIN_GPS_TX);
 //GPS_MTK333X_Serial GPS;
@@ -101,10 +102,13 @@ void setup() {
 
 void loop() {
     //フライトピン
-    if (PIN_FLIGHT == LOW) flightPinMillis = millis();
+    if (PIN_FLIGHT == LOW && isFirstUnplug) flightPinMillis = millis();
 
-    //GPS受信バッファあふれ防止
-    GPS.check();
+    //スタック処理
+    stack();
+
+    //GPS受信バッファあふれ防止→たぶん不要？（ちゃんと見に行くから）
+    //GPS.check();
     switch (phase)
     {
     case 0:
@@ -132,11 +136,11 @@ void Landing() {
        // 前にうごかしたりパラシュート切り離したり…
         /*ニクロム線のカット*/
         Nichrome();
-    } else if (Timer);
+    } else if (Timer <= millis()){
         // 前にうごかしたりパラシュート切り離したり…
         /*ニクロム線のカット*/
         digitalWrite(PIN_NICHROME, HIGH);
-        NIchrome();
+        Nichrome();
     }
 
     phase = 1;
@@ -155,29 +159,29 @@ void GuideGPS() {
     //方位・距離を計算
     double direction, distance, angle;//方位，距離，角度の差
     imu::Vector<3> e_orientation_now;
-    getRad(&e_orientation_now);
 
-    getGPS(&direction, &distance, &e_orientation_now);
+    getGPS(&direction, &distance);
     
-    //ゴールまで4m以内なら，精密誘導へ
-    if (distance <= 4) {
+    //ゴールまでgpsで1.5m以内なら，精密誘導へ
+    if (distance <= 90000000) {//1.5 * 100 * 600000，あってるかわからない
         motor_stop();
         phase = 2;
         return;
     }
     
     //方位をみて制御
+    getRad(&e_orientation_now);
     angle = e_orientation_now.x() - direction;
 
     bool isPlus = false; //trueなら正，falseなら負
     if (angle > 0) isPlus = true;
 
     angle = abs(angle);
-    if (angle <= 0.26) motor_foward(255, 255); //だいたい15度
-    else if (angle <= 1.3 && isPlus) motor_foward(178, 255);//だいたい75度，ゴールが右手，出70%くらい
-    else if (angle <= 1.3) motor_foward(255, 178);
-    else if (angle <= 3.14 && isPlus) motor_foward(76, 255);
-    else if (angle <= 3.15) motor_foward(255, 75);//わざと3.15，というのも，PI = 3.141592...で，3.14ならカバーできない角度が生まれるため
+    if (angle <= 0.26) motor_forward(255, 255); //だいたい15度
+    else if (angle <= 1.3 && isPlus) motor_forward(178, 255);//だいたい75度，ゴールが右手，出70%くらい
+    else if (angle <= 1.3) motor_forward(255, 178);
+    else if (angle <= 3.14 && isPlus) motor_forward(76, 255);
+    else if (angle <= 3.15) motor_forward(255, 75);//わざと3.15，というのも，PI = 3.141592...で，3.14ならカバーできない角度が生まれるため
     
     delay(2000);
 }
@@ -200,7 +204,7 @@ void GuideDIST() {
             //制御
             rotate(0.175 * (18 - i));
             delay(10);
-            motor_foward(178, 178);
+            motor_forward(178, 178);
             delay(5000);
             motor_stop();
             break;
@@ -270,7 +274,7 @@ double getGPS(double* direction, double* distance) {
     getRad(&e_orientation_now);
 
     //4debug
-    uint32_t start, end;
+    //uint32_t start, end;
 
     while (true) {
         if (GPS.check() && GPS.isTimeUpdate() && GPS.isLocationUpdate()) {
@@ -293,17 +297,16 @@ double getGPS(double* direction, double* distance) {
         Serial.println(F("calc done (getGPS)"));
 
         //4debug
-        start = millis();
+        //start = millis();
         sd_gpslog(GPS.longitude(), GPS.latitude(), e_orientation_now.x());
         //sd_gpslog(GPS.longitude() / 600000.0, GPS.latitude() / 600000.0, e_orientation_now.x());        
-        end = millis() - start;
+        //end = millis() - start;
 
         Serial.print(F("sd write took(ms) : "));//およそ95msかかっていた
-        Serial.println(end);
+        //Serial.println(end);
         break;
         }
     }
-
     
     Serial.println(F("gps logged!"));
 
@@ -467,7 +470,7 @@ float getRad(imu::Vector<3>* e_orientation_now) {
         */
         
         if (millisTemp + 1000 < millis()) {
-            motor_foward(50, 50);
+            motor_forward(50, 50);
             delay(500);
             motor_stop();
         }
@@ -485,10 +488,10 @@ void stack() {
     /*あとでちゃんと動くか確かめる*/
     imu::Vector<3> e_orientation_now;
 
-    getRad(e_orientation_now);
-    while (e_orientatin_now.y() < 0) {
+    getRad(&e_orientation_now);
+    while (e_orientation_now.y() < 0) {
         if (e_orientation_now.y() > 0.3) break;
-        motor_foward(255, 255);
+        motor_forward(255, 255);
     }
     motor_stop();
 }

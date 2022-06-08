@@ -16,7 +16,7 @@ void motor_init() {
     pinMode(PIN_MO_L_B, OUTPUT);
 }
 
-void motor_foward(byte pwmR, byte pwmL) {
+void motor_forward(byte pwmR, byte pwmL) {
     digitalWrite(PIN_MO_R_B, LOW);
     digitalWrite(PIN_MO_L_B, LOW);
 
@@ -45,13 +45,13 @@ void motor_stop() {
 }
 
 /*
-void motor_foward_d(int distance) {
+void motor_forward_d(int distance) {
     int time, operatingTime;
     const int tireOneRotate = 40.84;// cm （タイヤ1回転は13*pi = 40.84cmくらい？）
     const int timeOfOneRotate = 5;//実験で良い感じの値を決める．A定電流制御でトルク一定のはずだから，定数としていいはず．
     operatingTime = (distance / tireOneRotate) * timeOfOneRotate;
 
-    foward(110);
+    forward(110);
 
     if((time + operatingTime) <= millis()) {
         motor_stop();

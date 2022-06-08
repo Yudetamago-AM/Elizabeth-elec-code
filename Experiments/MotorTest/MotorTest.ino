@@ -14,26 +14,26 @@ void setup() {
 void loop() {
     
     //直進（曲がる）
-    motor_foward(100, 100);// pwm 100
+    motor_forward(100, 100);// pwm 100
     delay(4000);
     motor_stop();
     delay(500);
     
-    motor_foward(178, 255);
+    motor_forward(178, 255);
     delay(3000);
     motor_stop();
     delay(500);
     
-    motor_foward(255, 178);
+    motor_forward(255, 178);
     delay(3000);
     motor_stop();
     delay(500);
 
-    motor_foward(100,0);
+    motor_forward(100,0);
     delay(1000);
     motor_stop();
 
-    motor_foward(0, 100);
+    motor_forward(0, 100);
     delay(1000);
     motor_stop();
     delay(2000);

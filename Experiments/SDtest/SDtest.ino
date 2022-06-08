@@ -172,7 +172,7 @@ float getRad(imu::Vector<3>* e_orientation_now) {
         q_orientation_now = bno.getQuat();
         /*
         if (millisTemp + 1000 < millis()) {
-            motor_foward(50, 50);
+            motor_forward(50, 50);
             delay(100);
             motor_stop();
         }
