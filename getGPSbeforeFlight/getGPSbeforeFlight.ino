@@ -57,9 +57,9 @@ void loop() {
             小数点以下7桁で1cm精度
             */
             Serial.println("gpsInfo.latitude(ido)(degree):");
-            Serial.println(gpsInfo.latitude / 600000.0, 10);
+            Serial.println(gpsInfo.latitude);
             Serial.println("gpsInfo.longtitude(keido)(degree):");
-            Serial.println(gpsInfo.longitude / 600000.0, 10);
+            Serial.println(gpsInfo.longitude);
             Serial.println("gpsInfo.altitude(koudo)(m):");
             Serial.println(gpsInfo.altitude / 100.0);
         }

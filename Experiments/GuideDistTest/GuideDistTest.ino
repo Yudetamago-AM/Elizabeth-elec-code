@@ -1,24 +1,29 @@
 #include <Arduino.h>
+#include <PinAssign.h>
+#include <Motor.h>
 #include <Adafruit_Sensor.h>
 #include <Adafruit_BNO055.h>
 #include <utility/imumaths.h>
+#include <SD_RW.h>
 
-#include <PinAssign.h>
-#include <Motor.h>
-
+byte phase = 3;
 Adafruit_BNO055 bno = Adafruit_BNO055(55, 0x28);
-unsigned long millisTemp;
-unsigned long millisTemp2;
+unsigned long millisTemp = 0;
+unsigned long millisTemp2 = 0;
 
 void setup() {
+    /*Motor initialize*/
+    motor_init();
+    motor_stop();
+
     /*serial (for debug) initialize*/
     Serial.begin(9600);
     Serial.println(F("Serial begin"));
 
-    /*motor init*/
-    motor_init();
-    motor_stop();
-    Serial.println("motor init done");
+    /*Distance sensor initialize*/
+    pinMode(PIN_DIST_TRIG, OUTPUT);
+    pinMode(PIN_DIST_ECHO, INPUT);
+    digitalWrite(PIN_DIST_TRIG, LOW);
 
     /*BNO055 initialize*/
     while (!bno.begin()) {
@@ -27,25 +32,129 @@ void setup() {
     }
     bno.setExtCrystalUse(true);//のっかってるからには使わねば（精度向上）
     Serial.println(F("BNO055 ready"));
+
+    /*SD initialize*/
+    sd_init();
 }
-
-//bool isFirst = true;
-
 void loop() {
-    uint8_t mag;
-    bno.getCalibration(NULL, NULL, NULL, &mag);
-    if (mag >= 1) {
-        rotate(1);
-        //isFirst = false;
+switch (phase)
+    {
+    case 3:
+        GuideDIST();
+        //stack();
+        break;
+    case 4:
+        Goal();
+        //stack();
+        break;
+    case 5://ゴール後
+        //GPS.check();
+        delay(10000);
+        break;
     }
-    delay(3000);
-    if (mag >= 1) {
-        rotate(-1);
-        //isFirst = false;
-    }
-    delay(3000);
 }
 
+void GuideDIST() {
+    Serial.println(F("guideDist begin"));
+    byte dist[18], i;//あるいは，印付けてみるとか？
+
+    rotate(-1.57);//90度左回転
+    for (i = 0; i < 18; i++) {
+        dist[i] = Distance() / 2;//2cm単位 
+        rotate(0.175);
+        delay(10);
+    }
+    for (i = 0; i < 18; i++) {
+        if((dist[i] < 200) && (abs(dist[i] - dist[i - 1]) < 5)) {
+            //ログ
+            sd_log("d-d: " + String(i));//distance direction
+            sd_log("d: " + String(dist[i]));
+            //4debug
+            delay(50);
+
+            //制御
+            rotate(0.175 * (18 - i));
+            delay(10);
+            motor_forward(178, 178);
+            delay(1000);
+            motor_stop();
+            break;
+        }
+    }
+    Serial.println(F("done"));
+    phase = 4;//is goal?
+}
+
+void Goal() {
+    Serial.println(F("isGoal begin"));
+    //4m以内判定
+    
+    bool gpsComplete = true;
+    /*
+    double direction, distance;
+
+    getGPS(&direction, &distance);
+    if (distance < 240000000) {
+        gpsComplete = true;
+        GuideDIST();
+    } else {
+        GuideGPS();
+    }
+    */
+
+    //0m判定
+    bool right = false, left = false;
+    if (gpsComplete && (Distance() < 5)) {
+        rotate(0.1);
+        if (Distance() < 5) right = true;
+        rotate(-0.2);
+        if (Distance() < 5) left = true;
+    } else {
+        phase = 3;
+        return;
+    }
+    if (gpsComplete && right && left) {
+        phase = 5;//guide done -- wait for power off
+        Serial.println(F("0m goal!"));
+        return;
+    }
+}
+
+double Distance() {
+    /*
+    距離(cm)を返す
+    一応，九軸センサー内蔵の温度センサーで温度を見て，校正しているが，だめっぽかったら15℃として計算してる
+    これは, ambient temperature なのか， sensor temperatureなのか，よくわからん（データーシートにも混在）→実験してみる
+    ！！メモリ節約のため，25度で計算
+    */
+    int Duration;
+    double Distance;
+
+    digitalWrite(PIN_DIST_TRIG, HIGH);
+    delayMicroseconds(10);
+    digitalWrite(PIN_DIST_TRIG, LOW);
+
+    Duration = pulseIn(PIN_DIST_ECHO, HIGH, 23200);//400cm以上の場合0を返す
+    if (Duration > 0) {
+        //Distance = Duration * (0.6 * temp + 331.5) / 20000;
+        // D(cm) = T(μS) × 1/2(片道) × 340(m/s) × 100(cm/m) × 1/1000000(μS/S)
+        // https://nobita-rx7.hatenablog.com/entry/27884818
+        // D = T * 0.00005 * c(m/s) = T / 20000
+        // c(近似) = 0.6 * temp + 331.5　
+
+        //Distance = Duration / 58.8;// 15℃ 1013hpa
+        // D = T * 0.017 = T / 58.8
+
+        Distance = Duration / 57.6;
+        // 25度の音速346.75(m/s)なので347として計算
+        // D = T * 0.01735 = T / 57.6
+    } else {
+        Distance = 400;
+    }
+    return Distance;
+}
+
+/*Rotate to the ABSOLUTE angle (in euler)*/
 void rotate(double angle) {
     millisTemp2 = millis();
     /*
@@ -135,7 +244,7 @@ void rotate(double angle) {
     
     if (destAngle > 0) {
         while (e_orientation_now.x() <= destAngle) {
-            motor_rotate_L(110);
+            motor_rotate_L(80);
             
             //if (millisTemp + 5000 <= millis()) break;
             delay(1);
@@ -146,7 +255,7 @@ void rotate(double angle) {
     }
     if (destAngle < 0) {
         while (e_orientation_now.x() >= destAngle) {
-            motor_rotate_R(110);
+            motor_rotate_R(80);
             
             //if (millisTemp + 5000 <= millis()) break;
             delay(1);
@@ -158,6 +267,7 @@ void rotate(double angle) {
     
     return;
 }
+
 
 float getRad(imu::Vector<3>* e_orientation_now) {
     //止まっているとCalibrationが悪くなるので，だめだったらちょっと動かす用
@@ -176,7 +286,7 @@ float getRad(imu::Vector<3>* e_orientation_now) {
         */
         q_orientation_now = bno.getQuat();
         
-        
+        /*
         if (millisTemp + 1000 < millis()) {
             motor_rotate_R(100);
             delay(200);
@@ -184,6 +294,7 @@ float getRad(imu::Vector<3>* e_orientation_now) {
             delay(200);
             motor_stop();
         }
+        */
         
     } while (mag < 1);//1, 2，3の時のみループを抜けて出力
     //一時的にすべての場合にしてみる

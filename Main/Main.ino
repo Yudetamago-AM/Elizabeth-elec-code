@@ -25,20 +25,26 @@ byte phase = 0;
 /*重要！！電源オンからのタイマー，ミリ秒単位で指定*/
 const unsigned long Timer = 600000; //600 * 1000, 600秒 は 10分
 /*フライトピン解放からのタイマー*/
-const unsigned int flightPinTimer = 50000;//50s
+const unsigned int flightPinTimer = 10000;//50s//10s
 unsigned long flightPinMillis;
 /*重要！！ゴールのGPS座標*/
-const long goal_longitude = 81463122; //経度*600000(60万)
-const long goal_latitude = 20880173; //緯度*600000
+const long goal_longitude = 81461531; //経度*600000(60万)
+const long goal_latitude = 20881369; //緯度*600000
 
 unsigned long millisTemp = 0;
+unsigned long millisTemp2 = 0;
 bool isFirstUnplug = true;
+byte goalCount = 0;
 
 GPS_MTK333X_SoftwareSerial GPS(PIN_GPS_RX, PIN_GPS_TX);
 //GPS_MTK333X_Serial GPS;
 Adafruit_BNO055 bno = Adafruit_BNO055(55, 0x28);
 
 void setup() {
+    /*Motor initialize*/
+    motor_init();
+    motor_stop();
+
     /*ニクロム線の初期設定*/
     pinMode(PIN_NICHROME, OUTPUT);
     digitalWrite(PIN_NICHROME, LOW);
@@ -92,38 +98,38 @@ void setup() {
     pinMode(PIN_DIST_TRIG, OUTPUT);
     pinMode(PIN_DIST_ECHO, INPUT);
     digitalWrite(PIN_DIST_TRIG, LOW);
-    
-    /*Motor initialize*/
-    motor_init();
 
     /*flight pin initialize*/
     pinMode(PIN_FLIGHT, INPUT);
+
+    //4debug
+    Serial.println(F("setup done!"));
 }
 
 void loop() {
-    //フライトピン
-    if (PIN_FLIGHT == LOW && isFirstUnplug) flightPinMillis = millis();
-
-    //スタック処理
-    stack();
-
     //GPS受信バッファあふれ防止→たぶん不要？（ちゃんと見に行くから）
     //GPS.check();
     switch (phase)
     {
-    case 0:
-        Landing();
+    case 0://パラシュート展開まで待つ
+        waitTilUnPlug();
         break;
     case 1:
-        GuideGPS();
+        Landing();
         break;
     case 2:
-        GuideDIST();
+        GuideGPS();
+        //stack();
         break;
     case 3:
-        Goal();
+        GuideDIST();
+        //stack();
         break;
-    case 4://ゴール後
+    case 4:
+        Goal();
+        //stack();
+        break;
+    case 5://ゴール後
         GPS.check();
         delay(10000);
         break;
@@ -131,31 +137,55 @@ void loop() {
 }
 
 /*各シークエンス*/
+void waitTilUnPlug() {
+    //フライトピン
+    if ((digitalRead(PIN_FLIGHT) == HIGH) && isFirstUnplug) {
+        flightPinMillis = millis();
+        isFirstUnplug = false;
+        Serial.println(F("pin ms set!"));
+        phase = 1;//landing
+    } else if (Timer <= millis()) {
+        phase = 1;
+    }
+    delay(50);
+}
+
 void Landing() {
-    if ((flightPinMillis + flightPinTimer) <= millis()) {
+    Serial.println(F("landing seq begin"));
+    //if (millis() <= flightPinMillis + flightPinTimer) return;
+    if (((flightPinMillis + flightPinTimer) <= millis())) {
        // 前にうごかしたりパラシュート切り離したり…
         /*ニクロム線のカット*/
         Nichrome();
     } else if (Timer <= millis()){
         // 前にうごかしたりパラシュート切り離したり…
         /*ニクロム線のカット*/
-        digitalWrite(PIN_NICHROME, HIGH);
         Nichrome();
     }
 
-    phase = 1;
+    //センサーのキャリブレーションしとく
+    byte mag;
+    for (byte i = 0; i < 100; i++) {
+        bno.getCalibration(NULL, NULL, NULL, &mag);
+        delay(10);
+        if (mag > 0) break;
+    }
+    Serial.println(F("done"));
 }
+
 void Nichrome(){
         digitalWrite(PIN_NICHROME, HIGH);
         delay(2000);
-        motor_forward(178, 178);
+        motor_forward(255, 255);
         delay(3000);
-        motor_stop();
         digitalWrite(PIN_NICHROME,LOW);
+        motor_stop();
+        phase = 2;//gps
 }
 
 /*guide to the goal using GPS*/
 void GuideGPS() {
+    Serial.println(F("guidegps begin"));
     //方位・距離を計算
     double direction, distance, angle;//方位，距離，角度の差
     imu::Vector<3> e_orientation_now;
@@ -163,30 +193,51 @@ void GuideGPS() {
     getGPS(&direction, &distance);
     
     //ゴールまでgpsで1.5m以内なら，精密誘導へ
-    if (distance <= 90000000) {//1.5 * 100 * 600000，あってるかわからない
+    /*
+    if (distance <= 9) {//1.5 * 100 * 600000，あってるかわからない
         motor_stop();
-        phase = 2;
+        phase = 3;//guideDIST
         return;
     }
+    */
     
     //方位をみて制御
     getRad(&e_orientation_now);
-    angle = e_orientation_now.x() - direction;
+    //angle = e_orientation_now.x() - direction;
 
-    bool isPlus = false; //trueなら正，falseなら負
-    if (angle > 0) isPlus = true;
-
-    angle = abs(angle);
-    if (angle <= 0.26) motor_forward(255, 255); //だいたい15度
-    else if (angle <= 1.3 && isPlus) motor_forward(178, 255);//だいたい75度，ゴールが右手，出70%くらい
-    else if (angle <= 1.3) motor_forward(255, 178);
-    else if (angle <= 3.14 && isPlus) motor_forward(76, 255);
-    else if (angle <= 3.15) motor_forward(255, 75);//わざと3.15，というのも，PI = 3.141592...で，3.14ならカバーできない角度が生まれるため
+    //bool isPlus = false; //trueなら正，falseなら負
+    //if (angle > 0) isPlus = true;
     
+    if (direction > 0) angle = direction + e_orientation_now.x();
+    else angle = direction - e_orientation_now.x();
+    
+    while (angle > 3.14) {
+        angle -= 3.141592;
+    }
+    while (angle < -3.14) {
+        angle += 3.141592;
+    }
+
+    if (angle >= 2.89 || angle <= -2.89) motor_forward(255, 255); //だいたい15度, 3.15-0.26
+    else if (angle >= 1.85) motor_forward(178, 255);//だいたい75度，ゴールが右手，出70%くらい
+    else if (angle <= -1.85) motor_forward(255, 178);
+    else if (angle >= 0) motor_forward(76, 255);
+    else if (angle <= 0) motor_forward(255, 75);//わざと3.15，というのも，PI = 3.141592...で，3.14ならカバーできない角度が生まれるため
+    
+    /*
+    //パターン2
+    rotate(direction);
+    motor_forward(255, 255);
+    */
+
     delay(2000);
+
+    //motor_stop();
+    Serial.println(F("done"));
 }
 
 void GuideDIST() {
+    Serial.println(F("guideDist begin"));
     byte dist[18], i;//あるいは，印付けてみるとか？
 
     rotate(-1.57);//90度左回転
@@ -210,18 +261,22 @@ void GuideDIST() {
             break;
         }
     }
-    Goal();
+    Serial.println(F("done"));
+    phase = 4;//is goal?
 }
 
 void Goal() {
+    Serial.println(F("isGoal begin"));
     //4m以内判定
     bool gpsComplete = false;
     double direction, distance;
 
     getGPS(&direction, &distance);
-    if (distance < 4) {
+    if (distance < 240000000) {
         gpsComplete = true;
         GuideDIST();
+    } else {
+        GuideGPS();
     }
 
     //0m判定
@@ -233,12 +288,13 @@ void Goal() {
         if (Distance() < 5) left = true;
     }
     if (gpsComplete && right && left) {
-        phase = 4;
+        phase = 5;//guide done -- wait for power off
+        Serial.println(F("0m goal!"));
         return;
     }
 }
 
-/*Landing用*/
+/*Landing用
 bool isLanded() {
     bool isLanded = false;
     //フライトピンが加わったから，そのため書き直す
@@ -247,6 +303,7 @@ bool isLanded() {
     
     return isLanded;
 }
+*/
 
 /*GPSで方位と距離を計算する
 double getGPS(double* direction, double* distance, imu::Vector<3>* e_orientation_now) {
@@ -284,7 +341,7 @@ double getGPS(double* direction, double* distance) {
 
         //計算
         
-        dx = R * (goal_longitude - GPS.longitude()) * int(cos(goal_latitude) * 100);
+        dx = R * (goal_longitude - GPS.longitude()) * long(cos(goal_latitude) * 100);
         Serial.print(F("dx: "));
         Serial.println(dx);
         
@@ -293,8 +350,12 @@ double getGPS(double* direction, double* distance) {
         Serial.println(dy);
 
         *direction = atan2(dy, dx);
-        *distance = sqrt(pow(dx, 2) + pow(dy, 2)) / 6000000;
+        *distance = sqrt((dx * dx) + (dy * dy)) / 6000000;
         Serial.println(F("calc done (getGPS)"));
+        Serial.print(F("dir: "));
+        Serial.println(*direction);
+        Serial.print(F("dist: "));
+        Serial.println(*distance);
 
         //4debug
         //start = millis();
@@ -312,12 +373,11 @@ double getGPS(double* direction, double* distance) {
 
 }
 
-/*その他*/
+/*その他
 bool isMoving() {
-    /*
-    動いていたらtrue，動いていなかったらfalseを返す
-    動いていないということは，すなわちスタックしている，ということではない．
-    */
+    
+    //動いていたらtrue，動いていなかったらfalseを返す
+    //動いていないということは，すなわちスタックしている，ということではない．
     const int thAccel[3] = {1, 2, 1};// 動いているかどうかの閾値設定(m/s^2)　添字0:x軸, 1:y軸，2:z軸
     bool isMoving = false;
     sensors_event_t accelData;
@@ -328,6 +388,7 @@ bool isMoving() {
     }
     return isMoving;
 }
+*/
 
 double Distance() {
     /*
@@ -365,8 +426,7 @@ double Distance() {
 
 /*Rotate to the ABSOLUTE angle (in euler)*/
 void rotate(double angle) {
-    /*旋回速度，実験で決定する*/
-    const byte rotatePWM = 100;
+    millisTemp2 = millis();
     /*
     PIN_MO_L/R_Bはそれぞれ5,6ピンを使っているので，デューティー比が若干高くなるそう（下リファレンス）．
     http://www.musashinodenpa.com/arduino/ref/index.php?f=0&pos=2153
@@ -407,8 +467,6 @@ void rotate(double angle) {
     */
     imu::Vector<3> e_orientation_now;
     getRad(&e_orientation_now);
-    double angleNow = e_orientation_now.x();
-
     /*入れ替え
     // x to -y
     // y to x
@@ -423,78 +481,112 @@ void rotate(double angle) {
     imu::Vector<3> e_orientation_now = q_orientation_now.toEuler();
     double angleNow = radPI * e_orientation_now.z();
     */
-    double destAngle = angle - angleNow;
-    if (destAngle > 0) {
-        while (angleNow <= destAngle) {
-            /*右は後転，左は正転*/
-            digitalWrite(PIN_MO_L_B, LOW);
-            digitalWrite(PIN_MO_R_A, LOW);
-
-            analogWrite(PIN_MO_L_A, rotatePWM);
-            analogWrite(PIN_MO_R_B, rotatePWM);
-
-            getRad(&e_orientation_now);
-            angleNow = e_orientation_now.x();
-        }
-    } else if (destAngle < 0) {
-        while (angleNow <= destAngle) {
-            /*右は正転，左は後転*/
-            digitalWrite(PIN_MO_L_A, LOW);
-            digitalWrite(PIN_MO_R_B, LOW);
-
-            analogWrite(PIN_MO_L_B, rotatePWM);
-            analogWrite(PIN_MO_R_A, rotatePWM);
-
-            getRad(&e_orientation_now);
-            angleNow = e_orientation_now.x();
-        }
+    float destAngle;
+    if (angle > 0) destAngle = angle + e_orientation_now.x();
+    else destAngle = angle - e_orientation_now.x();
+    
+    while (destAngle > 3.14) {
+        destAngle -= 3.141592;
     }
-    motor_stop();
+    while (destAngle < -3.14) {
+        destAngle += 3.141592;
+    }
+    Serial.print(F("destAngle: "));
+    Serial.println(destAngle);
+    /*旋回*/
+    /*
+    while (e_orientation_now.x() <= destAngle) {
+        if (destAngle > 0) {
+            motor_rotate_L(110);
+            if ((e_orientation_now.x() <= destAngle) || dest)
+        }
+        else if (destAngle < 0) motor_rotate_R(110);
+
+        if (millisTemp2 + 5000 <= millis()) {
+            motor_stop();
+            return;
+        }
+
+        delay(12);//9軸は100Hz=10msごと更新だが余裕を見る
+        getRad(&e_orientation_now);
+    }
+    */
+    
+    if (destAngle > 0) {
+        while (e_orientation_now.x() <= destAngle) {
+            motor_rotate_L(110);
+            
+            //if (millisTemp + 5000 <= millis()) break;
+            delay(1);
+            getRad(&e_orientation_now);
+        }
+        motor_stop();
+        return;
+    }
+    if (destAngle < 0) {
+        while (e_orientation_now.x() >= destAngle) {
+            motor_rotate_R(110);
+            
+            //if (millisTemp + 5000 <= millis()) break;
+            delay(1);
+            getRad(&e_orientation_now);
+        }
+        motor_stop();
+        return;
+    }
+    
+    return;
 }
+
 
 float getRad(imu::Vector<3>* e_orientation_now) {
     //止まっているとCalibrationが悪くなるので，だめだったらちょっと動かす用
     millisTemp = millis();
 
-    uint8_t system;
+    uint8_t mag;//磁気センサーのキャリブレーション度を見る．
     imu::Quaternion q_orientation_now;
     
     do {
-        bno.getCalibration(&system, NULL, NULL, NULL);
+        bno.getCalibration(NULL, NULL, NULL, &mag);//system, gyro, accel, mag
 
         //for debug
         /*
         Serial.print("system: ");
         Serial.println(system);
-        q_orientation_now = bno.getQuat();
         */
+        q_orientation_now = bno.getQuat();
+        
         
         if (millisTemp + 1000 < millis()) {
-            motor_forward(50, 50);
-            delay(500);
+            motor_rotate_R(100);
+            delay(200);
+            motor_rotate_L(100);
+            delay(200);
             motor_stop();
         }
         
-        if (system >= 1) break;
-        else delay(100);
-    } while (system < 1);//1, 2，3の時のみループを抜けて出力
+    } while (mag < 1);//1, 2，3の時のみループを抜けて出力
     //一時的にすべての場合にしてみる
     
     q_orientation_now.normalize();//重力分を取り除く（vector.h）
     *e_orientation_now = q_orientation_now.toEuler();
 }
-
+/*
 void stack() {
-    /*あとでちゃんと動くか確かめる*/
-    imu::Vector<3> e_orientation_now;
-
-    getRad(&e_orientation_now);
-    while (e_orientation_now.y() < 0) {
-        if (e_orientation_now.y() > 0.3) break;
-        motor_forward(255, 255);
+    if ((phase > 1) && isMoving) {
+        //あとでちゃんと動くか確かめる
+        imu::Vector<3> e_orientation_now;
+        
+        getRad(&e_orientation_now);
+        while (e_orientation_now.y() < 0) {
+            if (e_orientation_now.y() > 0.3) break;
+            motor_forward(255, 255);
+        }
+        motor_stop();
     }
-    motor_stop();
+    
 }
+*/
 
 /*FOR DEBUG!!*/
 /*ローカル変数のメモリもみてみる*/

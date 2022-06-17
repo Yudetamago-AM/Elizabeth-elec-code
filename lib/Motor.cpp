@@ -16,12 +16,13 @@ void motor_init() {
     pinMode(PIN_MO_L_B, OUTPUT);
 }
 
+/*あとで全部これに統一*/
 void motor_forward(byte pwmR, byte pwmL) {
-    digitalWrite(PIN_MO_R_B, LOW);
-    digitalWrite(PIN_MO_L_B, LOW);
-
     analogWrite(PIN_MO_R_A, pwmR);
     analogWrite(PIN_MO_L_A, pwmL);
+
+    digitalWrite(PIN_MO_R_B, LOW);
+    digitalWrite(PIN_MO_L_B, LOW);
 }
 
 /*
@@ -62,4 +63,25 @@ void motor_forward_d(int distance) {
 }
 */
 
-//motor_rotateはmainに．
+//motor_rotateはmainに．→回すだけのを作ることにした（スタック処理とかでも使えるから）．
+
+/*右旋回*/
+void motor_rotate_R(byte pwm) {
+    //右は正転
+    digitalWrite(PIN_MO_R_A, LOW);
+    analogWrite(PIN_MO_R_B, pwm);
+
+    //左は後転
+    digitalWrite(PIN_MO_L_B, LOW);
+    analogWrite(PIN_MO_L_A, pwm);
+}
+
+void motor_rotate_L(byte pwm) {
+    //右は後転
+    digitalWrite(PIN_MO_R_B, LOW);
+    analogWrite(PIN_MO_R_A, pwm);
+
+    //左は正転
+    digitalWrite(PIN_MO_L_A, LOW);
+    analogWrite(PIN_MO_L_B, pwm);
+}

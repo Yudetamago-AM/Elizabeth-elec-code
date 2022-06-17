@@ -14,8 +14,8 @@
 //ゴールの経緯度
 //テストのため，知真館2号館をゴールとしている
 //固定小数点に！
-const long goal_longitude = 81463122; //経度*600000(60万)
-const long goal_latitude = 20880173; //緯度*600000
+const long goal_longitude = 81461537; //経度*600000(60万)
+const long goal_latitude = 20881368; //緯度*600000
 unsigned long millisTemp = 0;
 
 GPS_MTK333X_SoftwareSerial GPS(PIN_GPS_RX, PIN_GPS_TX);
@@ -88,8 +88,12 @@ void loop(){
     getGPS(&direction, &distance);
     Serial.print(F("direction: "));
     Serial.println(direction);
+    sd_log("direction: ");
+    sd_log(String(direction));
     Serial.print(F("distance: "));
     Serial.println(distance);
+    sd_log("distance: ");
+    sd_log(String(distance));
         
     //sd_log("G: " + String(GPS.time()));
     //delay(20);
