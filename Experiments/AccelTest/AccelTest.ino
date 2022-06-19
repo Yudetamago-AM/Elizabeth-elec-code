@@ -13,9 +13,6 @@ void setup() {
     Serial.begin(9600);
     Serial.println(F("Serial begin"));
 
-    /*sd init*/
-    sd_init();
-
     /*BNO055 initialize*/
     while (!bno.begin()) {
         Serial.println(F("BNO055 not ready"));
@@ -23,7 +20,9 @@ void setup() {
     }
     bno.setExtCrystalUse(true);//のっかってるからには使わねば（精度向上）
     Serial.println(F("BNO055 ready"));
-    
+
+    /*sd init*/
+    sd_init();
     byte i;
     for (i = 0; i < 5; i++) {
         //書き込み
@@ -31,29 +30,24 @@ void setup() {
         delay(10);
     }
 
+    sd_log("accel x,accel y,accel z");
     Serial.println(F("log done!"));
-
 }
 
 void loop(){
 
-        /*test accel;*/
+    /*test accel;*/
     sensors_event_t accelData;
     bno.getEvent(&accelData, Adafruit_BNO055::VECTOR_LINEARACCEL);
     //VECTOR_ACCELEROMETERだと，重力加速度も入ってる．
     Serial.println("Accel:");
     Serial.print(" x: ");
     Serial.println(accelData.acceleration.x, 6);
-    sd_log("accel x:");
-    sd_log(String(accelData.acceleration.x, 6));
     Serial.print(" y: ");
     Serial.println(accelData.acceleration.y, 6);
-    sd_log("accel y:");
-    sd_log(String(accelData.acceleration.y, 6));
     Serial.print(" z: ");
     Serial.println(accelData.acceleration.z, 6);
-    sd_log("accel z:");
-    sd_log(String(accelData.acceleration.z, 6));
+    sd_log(String(accelData.acceleration.x, 6) + "," + String(accelData.acceleration.y, 6) + "," + String(accelData.acceleration.z, 6) + ",");
 
      /* Display calibration status for each sensor. */
     uint8_t system, gyro, accel, mag = 0;
@@ -67,6 +61,7 @@ void loop(){
     Serial.print(" Mag=");
     Serial.println(mag);
     Serial.println("");
-    delay(900);//だいたい1秒ごと
+    
+    delay(100);
 }
 

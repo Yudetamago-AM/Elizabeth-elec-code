@@ -104,6 +104,9 @@ void setup() {
 
     //4debug
     Serial.println(F("setup done!"));
+    sd_log(F("Init done!"));
+    sd_log("Goal lat: " + String(goal_latitude));
+    sd_log("Goal long: " + String(goal_longitude));
 }
 
 void loop() {
@@ -143,6 +146,7 @@ void waitTilUnPlug() {
         flightPinMillis = millis();
         isFirstUnplug = false;
         Serial.println(F("pin ms set!"));
+        sd_log(F("FlightPin removed!"));
         phase = 1;//landing
     } else if (Timer <= millis()) {
         phase = 1;
@@ -151,7 +155,8 @@ void waitTilUnPlug() {
 }
 
 void Landing() {
-    Serial.println(F("landing seq begin"));
+    Serial.println(F("Landing seq begin"));
+    sd_log(F("landing seq begin"));
     //if (millis() <= flightPinMillis + flightPinTimer) return;
     if (((flightPinMillis + flightPinTimer) <= millis())) {
        // 前にうごかしたりパラシュート切り離したり…
@@ -180,12 +185,14 @@ void Nichrome(){
         delay(3000);
         digitalWrite(PIN_NICHROME,LOW);
         motor_stop();
+        sd_log(F("Nichrome heat done!"));
         phase = 2;//gps
 }
 
 /*guide to the goal using GPS*/
 void GuideGPS() {
-    Serial.println(F("guidegps begin"));
+    Serial.println(F("gidG bgn"));
+    sd_log(F("GPS Guide begin"));
     //方位・距離を計算
     double direction, distance, angle;//方位，距離，角度の差
     imu::Vector<3> e_orientation_now;
@@ -211,12 +218,14 @@ void GuideGPS() {
     if (direction > 0) angle = direction + e_orientation_now.x();
     else angle = direction - e_orientation_now.x();
     
+    /*
     while (angle > 3.14) {
         angle -= 3.141592;
     }
     while (angle < -3.14) {
         angle += 3.141592;
     }
+    */
 
     if (angle >= 2.89 || angle <= -2.89) motor_forward(255, 255); //だいたい15度, 3.15-0.26
     else if (angle >= 1.85) motor_forward(178, 255);//だいたい75度，ゴールが右手，出70%くらい
@@ -237,7 +246,8 @@ void GuideGPS() {
 }
 
 void GuideDIST() {
-    Serial.println(F("guideDist begin"));
+    Serial.println(F("gidD bgn"));
+    sd_log(F("DIST Guide begin"));
     byte dist[18], i;//あるいは，印付けてみるとか？
 
     rotate(-1.57);//90度左回転
@@ -255,8 +265,8 @@ void GuideDIST() {
             //制御
             rotate(0.175 * (18 - i));
             delay(10);
-            motor_forward(178, 178);
-            delay(5000);
+            motor_forward(255, 255);
+            delay(1500);
             motor_stop();
             break;
         }
@@ -267,6 +277,7 @@ void GuideDIST() {
 
 void Goal() {
     Serial.println(F("isGoal begin"));
+    sd_log("isGoal");
     //4m以内判定
     bool gpsComplete = false;
     double direction, distance;
@@ -336,22 +347,24 @@ double getGPS(double* direction, double* distance) {
     while (true) {
         if (GPS.check() && GPS.isTimeUpdate() && GPS.isLocationUpdate()) {
         long dx, dy;//x, yの変位
-        Serial.println(F("gps updated (getGPS)"));
+        //Serial.println(F("gps updated (getGPS)"));
         //byte tri_goal_latitude = underbyte(goal_latitude);
 
         //計算
         
-        dx = R * (goal_longitude - GPS.longitude()) * long(cos(goal_latitude) * 100);
+        dx = R * (goal_longitude - GPS.longitude());// * long(cos(goal_latitude / 600000.0) * 100);
+        Serial.println(goal_longitude - GPS.longitude());
         Serial.print(F("dx: "));
         Serial.println(dx);
         
-        dy = R * (goal_latitude - GPS.latitude()) * 100;
+        dy = R * (goal_latitude - GPS.latitude());// * 100;
+        Serial.println(goal_latitude - GPS.latitude());
         Serial.print(F("dy: "));
         Serial.println(dy);
 
         *direction = atan2(dy, dx);
-        *distance = sqrt((dx * dx) + (dy * dy)) / 6000000;
-        Serial.println(F("calc done (getGPS)"));
+        *distance = sqrt(pow(dx, 2) + pow(dy, 2));
+        //Serial.println(F("calc done (getGPS)"));
         Serial.print(F("dir: "));
         Serial.println(*direction);
         Serial.print(F("dist: "));
@@ -363,7 +376,7 @@ double getGPS(double* direction, double* distance) {
         //sd_gpslog(GPS.longitude() / 600000.0, GPS.latitude() / 600000.0, e_orientation_now.x());        
         //end = millis() - start;
 
-        Serial.print(F("sd write took(ms) : "));//およそ95msかかっていた
+        //Serial.print(F("sd write took(ms) : "));//およそ95msかかっていた
         //Serial.println(end);
         break;
         }

@@ -1,0 +1,7 @@
+set datafile separator ","
+set yrange [-40: 40]
+set xlabel "Time (ms)"
+set ylabel "Accel (m/s^2)"
+plot "L14.dat" using 1:2 w lp title "X-axis"
+replot "L14.dat" using 1:3 w lp title "Y-axis"
+replot "L14.dat" using 1:4 w lp title "Z-axis"
