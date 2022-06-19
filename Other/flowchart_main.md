@@ -1,9 +1,9 @@
 ```flow
 
-start=>start: 処理開始
-end=>end: 処理終了
+start=>start: 開始
+end=>end: 終了
 wait=>condition: 開傘したか
-landing=>subroutine: 着地シークエンス
+landing=>subroutine: 着地時動作
 gpsGuide=>subroutine: GPS誘導
 distGuide=>subroutine: 精密誘導
 isGoal=>condition: ゴール判定
