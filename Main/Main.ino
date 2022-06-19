@@ -199,14 +199,13 @@ void GuideGPS() {
 
     getGPS(&direction, &distance);
     
-    //ゴールまでgpsで1.5m以内なら，精密誘導へ
-    /*
-    if (distance <= 9) {//1.5 * 100 * 600000，あってるかわからない
+    //ゴールまでgpsで2m以内なら，精密誘導へ
+    if (distance <= 200) {//1.5 * 100 * 600000，あってるかわからない
         motor_stop();
         phase = 3;//guideDIST
         return;
     }
-    */
+    
     
     //方位をみて制御
     getRad(&e_orientation_now);
@@ -283,7 +282,7 @@ void Goal() {
     double direction, distance;
 
     getGPS(&direction, &distance);
-    if (distance < 240000000) {
+    if (distance < 500) {//gpsで5m以内
         gpsComplete = true;
         GuideDIST();
     } else {
@@ -346,12 +345,12 @@ double getGPS(double* direction, double* distance) {
 
     while (true) {
         if (GPS.check() && GPS.isTimeUpdate() && GPS.isLocationUpdate()) {
-        long dx, dy;//x, yの変位
         //Serial.println(F("gps updated (getGPS)"));
         //byte tri_goal_latitude = underbyte(goal_latitude);
 
         //計算
         
+        /*
         dx = R * (goal_longitude - GPS.longitude());// * long(cos(goal_latitude / 600000.0) * 100);
         Serial.println(goal_longitude - GPS.longitude());
         Serial.print(F("dx: "));
@@ -361,9 +360,14 @@ double getGPS(double* direction, double* distance) {
         Serial.println(goal_latitude - GPS.latitude());
         Serial.print(F("dy: "));
         Serial.println(dy);
-
-        *direction = atan2(dy, dx);
-        *distance = sqrt(pow(dx, 2) + pow(dy, 2));
+        */
+        //x, yの変位
+        long dx = ((lon_goal - lon_now) * 153);//0.000001度で0.92m(京田辺)，0.85m(能代)より，単位メートル
+        long dy = ((lat_goal - lat_now) * 185);//0.000001度で0.111m(111)より0.1
+        
+        if (dx == 0 && dy == 0) *direction = 0;
+        else *direction = atan2(dx, dy);//意図的にdx, dyの順，というのも，北基準だから．
+        *distance = approx_distance(dx, dy) / 10;//単位:cm
         //Serial.println(F("calc done (getGPS)"));
         Serial.print(F("dir: "));
         Serial.println(*direction);
@@ -385,6 +389,32 @@ double getGPS(double* direction, double* distance) {
     Serial.println(F("gps logged!"));
 
 }
+
+/*平方根を使わず2点間の距離を近似*/
+//参考
+//https://nowokay.hatenablog.com/entry/20120604/1338773843
+//https://dora.bk.tsukuba.ac.jp/~takeuchi/?%E3%83%97%E3%83%AD%E3%82%B0%E3%83%A9%E3%83%9F%E3%83%B3%E3%82%B0%2F%E5%B9%B3%E6%96%B9%E6%A0%B9%E3%82%92%E4%BD%BF%E3%82%8F%E3%81%9A%E3%81%AB%E8%B7%9D%E9%9B%A2%E3%82%92%E6%B1%82%E3%82%81%E3%82%8B
+long approx_distance(long dx, long dy) {
+   unsigned long min, max, approx;
+
+   if (dx < 0) dx = -dx;
+   if (dy < 0) dy = -dy;
+
+   if (dx < dy) {
+      min = dx;
+      max = dy;
+   } else {
+      min = dy;
+      max = dx;
+   }
+
+   approx = (max * 983) + (min * 407);
+   if (max < (min << 4))
+      approx -= ( max * 40 );
+
+   // add 512 for proper rounding
+   return ((approx + 512) >> 10);
+} 
 
 /*その他
 bool isMoving() {
