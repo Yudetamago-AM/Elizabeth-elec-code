@@ -62,6 +62,5 @@ void loop(){
     Serial.println(mag);
     Serial.println("");
     
-    delay(100);
 }
 
