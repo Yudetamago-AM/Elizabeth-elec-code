@@ -28,11 +28,9 @@ const unsigned long Timer = 600000; //600 * 1000, 600秒 は 10分
 const unsigned int flightPinTimer = 10000;//50s//10s
 unsigned long flightPinMillis;
 /*重要！！ゴールのGPS座標*/
-const long goal_longitude = 81461531; //経度*600000(60万)
-const long goal_latitude = 20881369; //緯度*600000
+const long goal_longitude = 81462529; //経度*600000(60万)
+const long goal_latitude = 20880914; //緯度*600000
 
-unsigned long millisTemp = 0;
-unsigned long millisTemp2 = 0;
 bool isFirstUnplug = true;
 byte goalCount = 0;
 
@@ -49,17 +47,17 @@ void setup() {
     pinMode(PIN_NICHROME, OUTPUT);
     digitalWrite(PIN_NICHROME, LOW);
 
-    /*serial (for debug) initialize*/
-    Serial.begin(9600);
-    Serial.println(F("Serial begin"));
+    /*//Serial (for debug) initialize*/
+    //Serial.begin(9600);
+    //Serial.println(F("Serial begin"));
 
     /*FOR DEBUG!! mem check*/
     /*不要なときはコメントアウト！！*/
     // 5/16時点で723bytesあまってる感じ
     /*
-    Serial.print(F("Free memory="));
-    Serial.print(freeRam(), DEC);
-    Serial.println(F("[bytes]"));
+    //Serial.print(F("Free memory="));
+    //Serial.print(freeRam(), DEC);
+    //Serial.println(F("[bytes]"));
     */
 
     /*SD initialize*/
@@ -67,15 +65,15 @@ void setup() {
 
     /*BNO055 initialize*/
     while (!bno.begin()) {
-        Serial.println(F("BNO055 not ready"));
+        //Serial.println(F("BNO055 not ready"));
         delay(100);
     }
     bno.setExtCrystalUse(true);//のっかってるからには使わねば（精度向上）
-    Serial.println(F("BNO055 ready"));
+    //Serial.println(F("BNO055 ready"));
 
     /*GPS initialize*/
     while (!GPS.begin(9600)) {
-        Serial.println(F("GPS not ready"));
+        //Serial.println(F("GPS not ready"));
         delay(100);
     }
     // UARTボーレートを 9600bpsに設定する
@@ -92,7 +90,7 @@ void setup() {
     // RMCとGGAをともに1サイクルで出力する（1サイクル時間は PMTK220 による）
     // 各項は ",GLL,RMC,VTG,GGA,GSA,GSV,0,0,0,0,0,0,0,0,0,0,0,ZDA,MCHN"
     GPS.sendMTKcommand(314, F(",0,1,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0"));
-    Serial.println(F("GPS ready"));
+    //Serial.println(F("GPS ready"));
 
     /*Distance sensor initialize*/
     pinMode(PIN_DIST_TRIG, OUTPUT);
@@ -103,17 +101,18 @@ void setup() {
     pinMode(PIN_FLIGHT, INPUT);
 
     //4debug
-    Serial.println(F("setup done!"));
+    //Serial.println(F("setup done!"));
+    sd_log("State,Decision,Control,Long,Lat,Angle");//S: State, D: Decision, C: Control, R: Result
     sd_log(F("Init done!"));
-    sd_log("Goal lat: " + String(goal_latitude));
-    sd_log("Goal long: " + String(goal_longitude));
+    sd_log("Goal_lat: " + String(goal_latitude));
+    sd_log("Goal_long: " + String(goal_longitude));
+    getGPS(NULL, NULL);
 }
 
 void loop() {
     //GPS受信バッファあふれ防止→たぶん不要？（ちゃんと見に行くから）
     //GPS.check();
-    switch (phase)
-    {
+    switch (phase) {
     case 0://パラシュート展開まで待つ
         waitTilUnPlug();
         break;
@@ -121,14 +120,17 @@ void loop() {
         Landing();
         break;
     case 2:
+        Backward();
         GuideGPS();
         //stack();
         break;
     case 3:
+        Backward();
         GuideDIST();
         //stack();
         break;
     case 4:
+        Backward();
         Goal();
         //stack();
         break;
@@ -145,8 +147,8 @@ void waitTilUnPlug() {
     if ((digitalRead(PIN_FLIGHT) == HIGH) && isFirstUnplug) {
         flightPinMillis = millis();
         isFirstUnplug = false;
-        Serial.println(F("pin ms set!"));
-        sd_log(F("FlightPin removed!"));
+        //Serial.println(F("pin ms set!"));
+        sd_log(F("FlightPin removed"));
         phase = 1;//landing
     } else if (Timer <= millis()) {
         phase = 1;
@@ -155,14 +157,15 @@ void waitTilUnPlug() {
 }
 
 void Landing() {
-    Serial.println(F("Landing seq begin"));
-    sd_log(F("landing seq begin"));
+    //Serial.println(F("Landing seq begin"));
     //if (millis() <= flightPinMillis + flightPinTimer) return;
     if (((flightPinMillis + flightPinTimer) <= millis())) {
-       // 前にうごかしたりパラシュート切り離したり…
+        sd_log(F(",FlightPin:landed"));
+        // 前にうごかしたりパラシュート切り離したり…
         /*ニクロム線のカット*/
         Nichrome();
     } else if (Timer <= millis()){
+        sd_log(F(",Timer:landed"));
         // 前にうごかしたりパラシュート切り離したり…
         /*ニクロム線のカット*/
         Nichrome();
@@ -175,7 +178,7 @@ void Landing() {
         delay(10);
         if (mag > 0) break;
     }
-    Serial.println(F("done"));
+    //Serial.println(F("done"));
 }
 
 void Nichrome(){
@@ -185,28 +188,30 @@ void Nichrome(){
         delay(3000);
         digitalWrite(PIN_NICHROME,LOW);
         motor_stop();
-        sd_log(F("Nichrome heat done!"));
+        sd_log(F(",,Nichrome heat"));
         phase = 2;//gps
 }
 
 /*guide to the goal using GPS*/
 void GuideGPS() {
-    Serial.println(F("gidG bgn"));
-    sd_log(F("GPS Guide begin"));
+    static double angle_threshold = 0.39;//左右各22.5度，全部で45度
+    //Serial.println(F("gidG bgn"));
+    sd_log(F("GPS Guide"));
     //方位・距離を計算
     double direction, distance, angle;//方位，距離，角度の差
     imu::Vector<3> e_orientation_now;
 
     getGPS(&direction, &distance);
-    
-    //ゴールまでgpsで2m以内なら，精密誘導へ
-    if (distance <= 200) {//1.5 * 100 * 600000，あってるかわからない
+
+    //ゴールまでgpsで2.5m以内なら，精密誘導へ
+    if (distance <= 300) {//1.5 * 100 * 600000，あってるかわからない
         motor_stop();
         phase = 3;//guideDIST
+        sd_log(",GPS Guide done");
         return;
     }
     
-    
+    if (distance <= 600) angle_threshold = 0.2;//左右各12度，全部で24度
     //方位をみて制御
     getRad(&e_orientation_now);
     //angle = e_orientation_now.x() - direction;
@@ -214,96 +219,171 @@ void GuideGPS() {
     //bool isPlus = false; //trueなら正，falseなら負
     //if (angle > 0) isPlus = true;
     
-    if (direction > 0) angle = direction + e_orientation_now.x();
-    else angle = direction - e_orientation_now.x();
+    //if (direction > 0) angle = direction + e_orientation_now.x();
+    //else angle = direction - e_orientation_now.x();
     
-    /*
-    while (angle > 3.14) {
+    angle = direction + e_orientation_now.x();
+
+    while (angle > 3.141592) {
         angle -= 3.141592;
     }
-    while (angle < -3.14) {
+    while (angle < -3.141592) {
         angle += 3.141592;
+    }
+    /*
+    sd_log(",goal or:" + String(angle) + ",,");
+
+    if (angle <= 0.26 && angle >= -0.26) {
+        motor_forward(255, 255);//だいたい15度, 3.15-0.26
+        sd_log(",,m_f:2525,");
+    } else if (angle <= 1.3) {
+        motor_forward(178, 255);//だいたい75度，ゴールが右手，出70%くらい
+        sd_log(",,m_f:1725");
+    } else if (angle >= -1.3) {
+        motor_forward(255, 178);
+        sd_log(",,m_f:2517");
+    } else if (angle >= 0) {
+        motor_forward(76, 255);
+        sd_log(",,m_f:0725");
+    } else if (angle <= 0) {
+        motor_forward(255, 76);//わざと3.15，というのも，PI = 3.141592...で，3.14ならカバーできない角度が生まれるため
+        sd_log(",,m_f:2507");
     }
     */
 
-    if (angle >= 2.89 || angle <= -2.89) motor_forward(255, 255); //だいたい15度, 3.15-0.26
-    else if (angle >= 1.85) motor_forward(178, 255);//だいたい75度，ゴールが右手，出70%くらい
-    else if (angle <= -1.85) motor_forward(255, 178);
-    else if (angle >= 0) motor_forward(76, 255);
-    else if (angle <= 0) motor_forward(255, 75);//わざと3.15，というのも，PI = 3.141592...で，3.14ならカバーできない角度が生まれるため
-    
-    /*
     //パターン2
-    rotate(direction);
-    motor_forward(255, 255);
-    */
+    if ((angle > ((-1) * angle_threshold)) && (angle < angle_threshold) {
+        motor_forward(255, 255);
+        sd_log(",diff:" + String(angle));
+        sd_log(",,m_f:255255");
+        delay(900);
+    } else {
+        motor_rotate_L(255);
+        delay(200);
+        motor_stop();
+        rotate((-1) * direction);
+        sd_log(",rotate to:" + String((-1) * direction));
+        motor_stop();
+    }
+    //delay(800);
 
-    delay(2000);
+    //delay(2000);
+    //delayしなくても，1Hzくらいではうごくはず．→うごいた
 
-    //motor_stop();
-    Serial.println(F("done"));
+    //Serial.println(F("done"));
+    return;
 }
 
 void GuideDIST() {
-    Serial.println(F("gidD bgn"));
-    sd_log(F("DIST Guide begin"));
-    byte dist[18], i;//あるいは，印付けてみるとか？
-
-    rotate(-1.57);//90度左回転
-    for (i = 0; i < 18; i++) {
-        dist[i] = Distance() / 2;//2cm単位 
-        rotate(0.175);
-        delay(10);
+    //Serial.println(F("gidD bgn"));
+    /*精密誘導が上手くいかない場合*/
+    if (goalCount > 4) {
+        phase = 5;
+        return;
     }
+
+    sd_log(F("DIST Guide"));
+    imu::Vector<3> e_orientation_now;
+    getRad(&e_orientation_now);
+
+    byte dist[18], i;//あるいは，印付けてみるとか？
+    dist[0] = 200;
+    rotate(e_orientation_now.x() - 1.57);//90度左回転
+    
     for (i = 0; i < 18; i++) {
-        if((dist[i] < 200) && (abs(dist[i] - dist[i - 1]) < 5)) {
+        getRad(&e_orientation_now);
+        dist[i] = Distance() / 2;//2cm単位 
+        rotate(e_orientation_now.x() + 0.175);
+        delay(10);
+        /*
+        for ((dist[i] < 200) && (abs(dist[i] - dist[i - 1]) > 100)) {
+            sd_log("dist:" + String(dist[i]))
+        }
+        */
+    }
+
+    for (i = 0; i < 18; i++) {
+        if((dist[i] < 200) && (abs(dist[i] - dist[i - 1]) < 10)) {
             //ログ
-            sd_log("d-d: " + String(i));//distance direction
-            sd_log("d: " + String(dist[i]));
+            sd_log("dist_num:" + String(i));//distance direction
+            sd_log("dist:" + String(dist[i]));
 
             //制御
-            rotate(0.175 * (18 - i));
+            getRad(&e_orientation_now);
+            rotate(e_orientation_now.x() - (0.175 * (18 - i)));
             delay(10);
             motor_forward(255, 255);
-            delay(1500);
-            motor_stop();
+            //millisTemp2 = millis();
+            sd_log(",,m_f:255255");
+            delay(850);
+            /*
+            while (1) {
+                if (millisTemp2 + 1500 <= millis()) {
+                    motor_stop;
+                    break;
+                }
+            }
+            */
             break;
         }
     }
-    Serial.println(F("done"));
+
+    //Serial.println(F("done"));
     phase = 4;//is goal?
 }
 
 void Goal() {
-    Serial.println(F("isGoal begin"));
+    //Serial.println(F("isGoal begin"));
     sd_log("isGoal");
-    //4m以内判定
+
     bool gpsComplete = false;
+    bool right = false, left = false;
     double direction, distance;
 
     getGPS(&direction, &distance);
-    if (distance < 500) {//gpsで5m以内
+    if (distance < 400) {//gpsで5m以内
         gpsComplete = true;
-        GuideDIST();
-    } else {
-        GuideGPS();
+    } else if (goalCount > 4) {
+        phase = 2;
+        return;
     }
 
     //0m判定
-    bool right = false, left = false;
     if (gpsComplete && (Distance() < 5)) {
-        rotate(0.1);
+        motor_rotate_R(100);
+        delay(200);
+        motor_stop();
         if (Distance() < 5) right = true;
-        rotate(-0.2);
+
+        motor_rotate_L(100);
+        delay(200);
+        motor_stop();
         if (Distance() < 5) left = true;
+    } else {
+        phase = 4;
     }
     if (gpsComplete && right && left) {
         phase = 5;//guide done -- wait for power off
-        Serial.println(F("0m goal!"));
-        return;
+        //Serial.println(F("0m goal!"));
     }
+    goalCount++;
+    return;
 }
 
+void Backward() {
+    imu::Vector<3> e_orientation_now;
+    getRad(&e_orientation_now);
+
+    while (!((e_orientation_now.z() > -0.5) && (e_orientation_now.z() < 1))) {//あとで閾値設定
+        sd_log("or_y:" + String(e_orientation_now.y()));
+        sd_log(",,m_f:178178");
+        motor_forward(178, 178);
+        getRad(&e_orientation_now);
+    }
+    motor_stop();
+    
+    return;
+}
 /*Landing用
 bool isLanded() {
     bool isLanded = false;
@@ -336,7 +416,8 @@ double getGPS(double* direction, double* distance, imu::Vector<3>* e_orientation
 */
 /*GPSで方位と距離を計算する*/
 double getGPS(double* direction, double* distance) {
-    const unsigned long R = 6376008;//能代市役所から，地球の中心までの距離
+    //const unsigned long R = 6376008;//能代市役所から，地球の中心までの距離
+    unsigned long millisTemp;
     imu::Vector<3> e_orientation_now;
     getRad(&e_orientation_now);
 
@@ -345,48 +426,54 @@ double getGPS(double* direction, double* distance) {
 
     while (true) {
         if (GPS.check() && GPS.isTimeUpdate() && GPS.isLocationUpdate()) {
-        //Serial.println(F("gps updated (getGPS)"));
+        ////Serial.println(F("gps updated (getGPS)"));
         //byte tri_goal_latitude = underbyte(goal_latitude);
 
         //計算
         
         /*
         dx = R * (goal_longitude - GPS.longitude());// * long(cos(goal_latitude / 600000.0) * 100);
-        Serial.println(goal_longitude - GPS.longitude());
-        Serial.print(F("dx: "));
-        Serial.println(dx);
+        //Serial.println(goal_longitude - GPS.longitude());
+        //Serial.print(F("dx: "));
+        //Serial.println(dx);
         
         dy = R * (goal_latitude - GPS.latitude());// * 100;
-        Serial.println(goal_latitude - GPS.latitude());
-        Serial.print(F("dy: "));
-        Serial.println(dy);
+        //Serial.println(goal_latitude - GPS.latitude());
+        //Serial.print(F("dy: "));
+        //Serial.println(dy);
         */
         //x, yの変位
-        long dx = ((lon_goal - lon_now) * 153);//0.000001度で0.92m(京田辺)，0.85m(能代)より，単位メートル
-        long dy = ((lat_goal - lat_now) * 185);//0.000001度で0.111m(111)より0.1
+        long dx = ((goal_longitude - GPS.longitude()) * 153);//0.000001度で0.92m(京田辺)，0.85m(能代)より，単位メートル
+        long dy = ((goal_latitude - GPS.latitude()) * 185);//0.000001度で0.111m(111)より0.1
         
         if (dx == 0 && dy == 0) *direction = 0;
         else *direction = atan2(dx, dy);//意図的にdx, dyの順，というのも，北基準だから．
         *distance = approx_distance(dx, dy) / 10;//単位:cm
-        //Serial.println(F("calc done (getGPS)"));
-        Serial.print(F("dir: "));
-        Serial.println(*direction);
-        Serial.print(F("dist: "));
-        Serial.println(*distance);
+        ////Serial.println(F("calc done (getGPS)"));
+        //Serial.print(F("dir: "));
+        //Serial.println(*direction);
+        //Serial.print(F("dist: "));
+        //Serial.println(*distance);
+
+        millisTemp = millis();
+        sd_log("dir:" + String(*direction));
+        while ((millisTemp + 5) < millis()) {}
+        sd_log("dist:" + String(*distance));
 
         //4debug
         //start = millis();
-        sd_gpslog(GPS.longitude(), GPS.latitude(), e_orientation_now.x());
+        sd_log(",,," + String(GPS.longitude()) + "," + String(GPS.latitude()) + "," + String(e_orientation_now.x()));
+        //sd_gpslog(GPS.longitude(), GPS.latitude(), e_orientation_now.x());
         //sd_gpslog(GPS.longitude() / 600000.0, GPS.latitude() / 600000.0, e_orientation_now.x());        
         //end = millis() - start;
 
-        //Serial.print(F("sd write took(ms) : "));//およそ95msかかっていた
-        //Serial.println(end);
+        ////Serial.print(F("sd write took(ms) : "));//およそ95msかかっていた
+        ////Serial.println(end);
         break;
         }
     }
     
-    Serial.println(F("gps logged!"));
+    //Serial.println(F("gps logged!"));
 
 }
 
@@ -409,8 +496,7 @@ long approx_distance(long dx, long dy) {
    }
 
    approx = (max * 983) + (min * 407);
-   if (max < (min << 4))
-      approx -= ( max * 40 );
+   if (max < (min << 4)) approx -= ( max * 40 );
 
    // add 512 for proper rounding
    return ((approx + 512) >> 10);
@@ -469,6 +555,8 @@ double Distance() {
 
 /*Rotate to the ABSOLUTE angle (in euler)*/
 void rotate(double angle) {
+    unsigned long millisTemp2 = 0;
+
     millisTemp2 = millis();
     /*
     PIN_MO_L/R_Bはそれぞれ5,6ピンを使っているので，デューティー比が若干高くなるそう（下リファレンス）．
@@ -524,7 +612,7 @@ void rotate(double angle) {
     imu::Vector<3> e_orientation_now = q_orientation_now.toEuler();
     double angleNow = radPI * e_orientation_now.z();
     */
-    float destAngle;
+    float destAngle;//destまでのangle
     if (angle > 0) destAngle = angle + e_orientation_now.x();
     else destAngle = angle - e_orientation_now.x();
     
@@ -534,8 +622,8 @@ void rotate(double angle) {
     while (destAngle < -3.14) {
         destAngle += 3.141592;
     }
-    Serial.print(F("destAngle: "));
-    Serial.println(destAngle);
+    //Serial.print(F("destAngle: "));
+    //Serial.println(destAngle);
     /*旋回*/
     /*
     while (e_orientation_now.x() <= destAngle) {
@@ -557,23 +645,29 @@ void rotate(double angle) {
     
     if (destAngle > 0) {
         while (e_orientation_now.x() <= destAngle) {
-            motor_rotate_L(110);
+            motor_rotate_L(255);
+            sd_log(",,m_r_L:255");
             
-            //if (millisTemp + 5000 <= millis()) break;
+            if (millisTemp2 + 5000 <= millis()) break;
             delay(1);
             getRad(&e_orientation_now);
         }
+        motor_rotate_R(255);
+        delay(10);
         motor_stop();
         return;
     }
     if (destAngle < 0) {
         while (e_orientation_now.x() >= destAngle) {
-            motor_rotate_R(110);
+            motor_rotate_R(255);
+            sd_log(",,m_r_R:255");
             
-            //if (millisTemp + 5000 <= millis()) break;
+            if (millisTemp2 + 5000 <= millis()) break;
             delay(1);
             getRad(&e_orientation_now);
         }
+        motor_rotate_L(255);
+        delay(10);
         motor_stop();
         return;
     }
@@ -583,6 +677,7 @@ void rotate(double angle) {
 
 
 float getRad(imu::Vector<3>* e_orientation_now) {
+    unsigned long millisTemp = 0;
     //止まっているとCalibrationが悪くなるので，だめだったらちょっと動かす用
     millisTemp = millis();
 
@@ -594,17 +689,17 @@ float getRad(imu::Vector<3>* e_orientation_now) {
 
         //for debug
         /*
-        Serial.print("system: ");
-        Serial.println(system);
+        //Serial.print("system: ");
+        //Serial.println(system);
         */
         q_orientation_now = bno.getQuat();
         
         
         if (millisTemp + 1000 < millis()) {
-            motor_rotate_R(100);
-            delay(200);
-            motor_rotate_L(100);
-            delay(200);
+            motor_rotate_R(200);
+            delay(300);
+            motor_rotate_L(200);
+            delay(300);
             motor_stop();
         }
         

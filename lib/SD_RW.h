@@ -8,8 +8,13 @@
 #include <Wire.h>
 #include <bcdtime.h>
 
+/*initialize sd card(make file, etc)*/
 void sd_init();
+
+/*State,Decision,Control,Result*/
 void sd_log(String text);
-void sd_gpslog(long longitude, long latitude, float angle);
+
+/*log location, angle*/
+//void sd_gpslog(long longitude, long latitude, float angle);
 
 #endif
