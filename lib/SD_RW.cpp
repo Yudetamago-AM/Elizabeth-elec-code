@@ -30,7 +30,7 @@ void sd_init() {
     //Serial.println(fileName);
 
     log_isFirst = true;
-    gpslog_isFirst = true;
+    //gpslog_isFirst = true;
     Serial.println(F("SD ready"));
 }
 

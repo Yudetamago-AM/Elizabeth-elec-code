@@ -21,6 +21,8 @@ https://github.com/adafruit/Adafruit_BNO055
 #include <Motor.h>
 #include <SD_RW.h>
 
+#define ANGLE_TH 0.39//前45度，GPS誘導
+
 byte phase = 0;
 /*重要！！電源オンからのタイマー，ミリ秒単位で指定*/
 const unsigned long Timer = 600000; //600 * 1000, 600秒 は 10分
@@ -102,7 +104,7 @@ void setup() {
 
     //4debug
     //Serial.println(F("setup done!"));
-    sd_log("State,Decision,Control,Long,Lat,Angle");//S: State, D: Decision, C: Control, R: Result
+    sd_log(F("State,Decision,Control,Long,Lat,Angle"));//S: State, D: Decision, C: Control, R: Result
     sd_log(F("Init done!"));
     sd_log("Goal_lat: " + String(goal_latitude));
     sd_log("Goal_long: " + String(goal_longitude));
@@ -194,7 +196,6 @@ void Nichrome(){
 
 /*guide to the goal using GPS*/
 void GuideGPS() {
-    static double angle_threshold = 0.39;//左右各22.5度，全部で45度
     //Serial.println(F("gidG bgn"));
     sd_log(F("GPS Guide"));
     //方位・距離を計算
@@ -207,11 +208,11 @@ void GuideGPS() {
     if (distance <= 300) {//1.5 * 100 * 600000，あってるかわからない
         motor_stop();
         phase = 3;//guideDIST
-        sd_log(",GPS Guide done");
+        sd_log(F(",GPS Guide done"));
         return;
     }
     
-    if (distance <= 600) angle_threshold = 0.2;//左右各12度，全部で24度
+    //if (distance <= 600) ANGLE_TH = 0.2;//左右各12度，全部で24度
     //方位をみて制御
     getRad(&e_orientation_now);
     //angle = e_orientation_now.x() - direction;
@@ -224,11 +225,11 @@ void GuideGPS() {
     
     angle = direction + e_orientation_now.x();
 
-    while (angle > 3.141592) {
-        angle -= 3.141592;
+    while (angle > PI) {
+        angle -= PI;
     }
-    while (angle < -3.141592) {
-        angle += 3.141592;
+    while (angle < ((-1) * PI)) {
+        angle += PI;
     }
     /*
     sd_log(",goal or:" + String(angle) + ",,");
@@ -252,10 +253,10 @@ void GuideGPS() {
     */
 
     //パターン2
-    if ((angle > ((-1) * angle_threshold)) && (angle < angle_threshold) {
+    if ((angle > ((-1) * ANGLE_TH)) && (angle < ANGLE_TH)) {
         motor_forward(255, 255);
         sd_log(",diff:" + String(angle));
-        sd_log(",,m_f:255255");
+        sd_log(F(",,m_f:255255"));
         delay(900);
     } else {
         motor_rotate_L(255);
@@ -314,7 +315,7 @@ void GuideDIST() {
             delay(10);
             motor_forward(255, 255);
             //millisTemp2 = millis();
-            sd_log(",,m_f:255255");
+            sd_log(F(",,m_f:255255"));
             delay(850);
             /*
             while (1) {
@@ -334,7 +335,7 @@ void GuideDIST() {
 
 void Goal() {
     //Serial.println(F("isGoal begin"));
-    sd_log("isGoal");
+    sd_log(F("isGoal"));
 
     bool gpsComplete = false;
     bool right = false, left = false;
@@ -376,7 +377,7 @@ void Backward() {
 
     while (!((e_orientation_now.z() > -0.5) && (e_orientation_now.z() < 1))) {//あとで閾値設定
         sd_log("or_y:" + String(e_orientation_now.y()));
-        sd_log(",,m_f:178178");
+        sd_log(F(",,m_f:178178"));
         motor_forward(178, 178);
         getRad(&e_orientation_now);
     }
@@ -646,7 +647,7 @@ void rotate(double angle) {
     if (destAngle > 0) {
         while (e_orientation_now.x() <= destAngle) {
             motor_rotate_L(255);
-            sd_log(",,m_r_L:255");
+            sd_log(F(",,m_r_L:255"));
             
             if (millisTemp2 + 5000 <= millis()) break;
             delay(1);
@@ -660,7 +661,7 @@ void rotate(double angle) {
     if (destAngle < 0) {
         while (e_orientation_now.x() >= destAngle) {
             motor_rotate_R(255);
-            sd_log(",,m_r_R:255");
+            sd_log(F(",,m_r_R:255"));
             
             if (millisTemp2 + 5000 <= millis()) break;
             delay(1);

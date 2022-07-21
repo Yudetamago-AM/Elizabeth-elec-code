@@ -6,7 +6,6 @@
 #include <Adafruit_Sensor.h>
 #include <Adafruit_BNO055.h>
 #include <utility/imumaths.h>
-#include <q_math.h>
 /*以下lib内自作ライブラリ*/
 #include <PinAssign.h>
 #include <SD_RW.h>
@@ -73,6 +72,11 @@ void setup() {
     Serial.println(goal_longitude);
     Serial.print("goal latitude: ");
     Serial.println(goal_latitude);
+
+    sd_log("State,Decision,Control,Long,Lat,Angle");//S: State, D: Decision, C: Control, R: Result
+    sd_log(F("Init done!"));
+    sd_log("Goal_lat: " + String(goal_latitude));
+    sd_log("Goal_long: " + String(goal_longitude));
 }
 
 void loop(){
@@ -136,7 +140,7 @@ double getGPS(double* direction, double* distance) {
 
         //4debug
         start = millis();
-        sd_gpslog(GPS.longitude(), GPS.latitude(), e_orientation_now.x());
+        //sd_gpslog(GPS.longitude(), GPS.latitude(), e_orientation_now.x());
         //sd_gpslog(GPS.longitude() / 600000.0, GPS.latitude() / 600000.0, e_orientation_now.x());        
         end = millis() - start;
 
