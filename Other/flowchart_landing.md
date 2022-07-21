@@ -13,6 +13,6 @@ phase=>operation: フェーズ=GPS誘導フェーズ
 start->flightPin(yes)->cutting
 flightPin(no)->timer
 timer(no)->flightPin()
-timer(yes)->cutting->log->phase->end
+timer(yes)->cutting(right)->log(right)->phase->end
 
 ```

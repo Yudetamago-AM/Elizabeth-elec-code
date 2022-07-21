@@ -13,8 +13,8 @@ forward=>operation: モーター制御
 log=>operation: ログ書き込み
 isgoal=>operation: フェーズ=ゴール判定フェーズ
 
-start->backward->rotate90->rotate->checkdist->ischecked
+start->backward->rotate90->checkdist->rotate->ischecked
 ischecked(yes)->rotatedir->forward->log->isgoal->end
-ischecked(no)->rotate
+ischecked(no)->checkdist
 
 ```

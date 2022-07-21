@@ -2,7 +2,7 @@
 
 start=>start: 開始
 end=>end: 終了
-wait=>subroutine: 開傘まで待機
+wait=>subroutine: フライトピン
 landing=>subroutine: 着地時動作
 gpsGuide=>subroutine: GPS誘導
 distGuide=>subroutine: 精密誘導
