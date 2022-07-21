@@ -155,7 +155,7 @@ double getGPS(double* direction, double* distance) {
 
         //4debug
         //start = millis();
-        sd_gpslog(GPS.longitude(), GPS.latitude(), e_orientation_now.x());
+        //sd_gpslog(GPS.longitude(), GPS.latitude(), e_orientation_now.x());
         //sd_gpslog(GPS.longitude() / 600000.0, GPS.latitude() / 600000.0, e_orientation_now.x());
         //end = millis() - start;
 
@@ -200,7 +200,7 @@ float getRad(imu::Vector<3>* e_orientation_now) {
 
     uint8_t mag;//磁気センサーのキャリブレーション度を見る．
     imu::Quaternion q_orientation_now;
-    
+    /*
     do {
         bno.getCalibration(NULL, NULL, NULL, &mag);//system, gyro, accel, mag
 
@@ -222,6 +222,7 @@ float getRad(imu::Vector<3>* e_orientation_now) {
         
     } while (mag < 1);//1, 2，3の時のみループを抜けて出力
     //一時的にすべての場合にしてみる
+    */
     
     q_orientation_now.normalize();//重力分を取り除く（vector.h）
     *e_orientation_now = q_orientation_now.toEuler();

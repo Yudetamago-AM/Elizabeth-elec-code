@@ -1,3 +1,4 @@
+#
 ```flow
 
 start=>start: 開始
@@ -8,8 +9,9 @@ forward=>operation: モーター制御
 （前転）
 isbackward=>condition: 機体が
 反転しているか
+log=>operation: ログ書き込み
 
-start->getrad->isbackward(no)->end
-isbackward(yes)->forward->end
+start->getrad(right)->isbackward(no, bottom)->log(right)->end
+isbackward(yes)->forward(right)->log
 
 ```

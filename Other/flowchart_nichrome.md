@@ -1,3 +1,7 @@
+##
+
+
+
 ```flow
 
 start=>start: 開始
@@ -7,6 +11,6 @@ Nichrome=>operation: ニクロム線加熱
 forward=>operation: モーター制御
 （前進）
 
-start->Nichrome->forward->end
+start(right)->Nichrome(right)->forward(right)->end
 
 ```
