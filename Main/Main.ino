@@ -52,8 +52,8 @@ void setup() {
     digitalWrite(PIN_NICHROME, LOW);
 
     /*//Serial (for debug) initialize*/
-    //Serial.begin(9600);
-    //Serial.println(F("Serial begin"));
+    Serial.begin(9600);
+    Serial.println(F("Serial begin"));
 
     /*FOR DEBUG!! mem check*/
     /*不要なときはコメントアウト！！*/
@@ -101,16 +101,17 @@ void setup() {
     pinMode(PIN_DIST_ECHO, INPUT);
     digitalWrite(PIN_DIST_TRIG, LOW);
 
-    /*flight pin initialize*/+
+    /*flight pin initialize*/
     pinMode(PIN_FLIGHT, INPUT);
 
     //4debug
     //Serial.println(F("setup done!"));
     sd_log(F("State,Decision,Control"));//S: State, D: Decision, C: Control, R: Result
     sd_log(F("Init done!"));
-    sd_log("Goal_lat: " + String(goal_latitude));
-    sd_log("Goal_long: " + String(goal_longitude));
-    getGPS(NULL, NULL);
+    sd_log("G_lat: " + String(goal_latitude));
+    sd_log("G_long: " + String(goal_longitude));
+    //getGPS(NULL, NULL);
+    delay(50);
 }
 
 void loop() {
@@ -147,12 +148,13 @@ void loop() {
 
 /*各シークエンス*/
 void waitTilUnPlug() {
+    Serial.println(F("wait"));
     //フライトピン
     if ((digitalRead(PIN_FLIGHT) == HIGH) && isFirstUnplug) {
         flightPinMillis = millis();
         isFirstUnplug = false;
         //Serial.println(F("pin ms set!"));
-        sd_log(F("FlightPin removed"));
+        sd_log(F("F_Pin:removed"));
         phase = 1;//landing
     } else if (Timer <= millis()) {
         phase = 1;
@@ -161,10 +163,11 @@ void waitTilUnPlug() {
 }
 
 void Landing() {
+    Serial.println(F("land"));
     //Serial.println(F("Landing seq begin"));
     //if (millis() <= flightPinMillis + flightPinTimer) return;
     if (((flightPinMillis + flightPinTimer) <= millis())) {
-        sd_log(F(",FlightPin:landed"));
+        sd_log(F(",F_Pin:landed"));
         // 前にうごかしたりパラシュート切り離したり…
         /*ニクロム線のカット*/
         Nichrome();
@@ -186,6 +189,7 @@ void Landing() {
 }
 
 void Nichrome(){
+        Serial.println(F("nic"));
         digitalWrite(PIN_NICHROME, HIGH);
         delay(2000);
         motor_forward(255, 255);
@@ -198,6 +202,7 @@ void Nichrome(){
 
 /*guide to the goal using GPS*/
 void GuideGPS() {
+    Serial.println(F("gps"));
     //Serial.println(F("gidG bgn"));
     sd_log(F("GPS Guide"));
     //方位・距離を計算
@@ -205,6 +210,8 @@ void GuideGPS() {
     imu::Vector<3> e_orientation_now;
 
     getGPS(&direction, &distance);
+    sd_log("dir:" + String(direction));
+    sd_log("dist:" + String(distance));
 
     //ゴールまでgpsで2.5m以内なら，精密誘導へ
     if (distance <= 300) {//1.5 * 100 * 600000，あってるかわからない
@@ -376,10 +383,10 @@ void Goal() {
 void Backward() {
     imu::Vector<3> e_orientation_now;
     getRad(&e_orientation_now);
+    sd_log("or_y:" + String(e_orientation_now.y()));
+    sd_log(F(",,m_f:178178"));
 
-    while (!((e_orientation_now.z() > -0.5) && (e_orientation_now.z() < 1))) {//あとで閾値設定
-        sd_log("or_y:" + String(e_orientation_now.y()));
-        sd_log(F(",,m_f:178178"));
+    while (!((e_orientation_now.z() > -0.5) && (e_orientation_now.z() < 1))) {//あとで閾値設定  
         motor_backward(178, 178);
         getRad(&e_orientation_now);
     }
@@ -422,7 +429,6 @@ double getGPS(double* direction, double* distance) {
     //const unsigned long R = 6376008;//能代市役所から，地球の中心までの距離
     unsigned long millisTemp;
     imu::Vector<3> e_orientation_now;
-    getRad(&e_orientation_now);
 
     //4debug
     //uint32_t start, end;
@@ -431,6 +437,8 @@ double getGPS(double* direction, double* distance) {
         if (GPS.check() && GPS.isTimeUpdate() && GPS.isLocationUpdate()) {
         //Serial.println(F("gps updated (getGPS)"));
         //byte tri_goal_latitude = underbyte(goal_latitude);
+        getRad(&e_orientation_now);
+        sd_gpslog(String(GPS.longitude()), String(GPS.latitude()), String(e_orientation_now.x(), 4));
 
         //計算
         
@@ -458,15 +466,15 @@ double getGPS(double* direction, double* distance) {
         //Serial.print(F("dist: "));
         //Serial.println(*distance);
 
-        millisTemp = millis();
-        sd_log("dir:" + String(*direction));
-        while ((millisTemp + 5) < millis()) {}
-        sd_log("dist:" + String(*distance));
+        //millisTemp = millis();
+        //sd_log("dir:" + String(*direction));
+        //while ((millisTemp + 5) < millis()) {}
+        //sd_log("dist:" + String(*distance));
 
         //4debug
         //start = millis();
         //sd_log(",,," + String(GPS.longitude()) + "," + String(GPS.latitude()) + "," + String(e_orientation_now.x()));
-        sd_gpslog(GPS.longitude(), GPS.latitude(), e_orientation_now.x());
+        //sd_gpslog(String(GPS.longitude()), String(GPS.latitude()), String(e_orientation_now.x(), 4));
         //sd_gpslog(GPS.longitude() / 600000.0, GPS.latitude() / 600000.0, e_orientation_now.x());        
         //end = millis() - start;
 

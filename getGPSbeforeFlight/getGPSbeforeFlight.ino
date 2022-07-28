@@ -104,9 +104,9 @@ void loop() {
     double direction, distance;
     getGPS(&direction, &distance);
     Serial.println("direction: " + String(direction) + "(rad)");
-    sd_log("dir: " + String(direction));
+    //sd_log("dir: " + String(direction));
     Serial.println("distance:" + String(distance) + "(cm)");
-    sd_log("dist: " + String(distance));
+    //sd_log("dist: " + String(distance));
 }
 
 /*GPSで方位と距離を計算する*/
@@ -161,6 +161,9 @@ double getGPS(double* direction, double* distance) {
 
         //Serial.print(F("sd write took(ms) : "));//およそ95msかかっていた
         //Serial.println(end);
+        sd_gpslog(String(GPS.longitude()), String(GPS.latitude()), String(e_orientation_now.x(), 4));
+        sd_log("dir: " + String(*direction));
+        sd_log("dist: " + String(*distance));
         break;
         }
     }
