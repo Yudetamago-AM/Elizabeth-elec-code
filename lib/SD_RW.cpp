@@ -3,7 +3,7 @@
 String fileName;
 int countFileName;
 static bool log_isFirst;
-//static bool gpslog_isFirst;
+static bool gpslog_isFirst;
 
 void sd_init() {
     pinMode(PIN_SD_CS, OUTPUT);
@@ -30,7 +30,7 @@ void sd_init() {
     //Serial.println(fileName);
 
     log_isFirst = true;
-    //gpslog_isFirst = true;
+    gpslog_isFirst = true;
     Serial.println(F("SD ready"));
 }
 
@@ -50,7 +50,6 @@ void sd_log(String text) {
     logText.close();
 }
 
-/*
 void sd_gpslog(long longitude, long latitude, float angle) {
     //あらかじめ1/60000しておいたものを入力
     File logText = SD.open("G" + fileName, FILE_WRITE);
@@ -67,7 +66,6 @@ void sd_gpslog(long longitude, long latitude, float angle) {
     }
     logText.close();
 }
-*/
 
 /*
 認識：自分の地点（gpsLog()），目標地点(log())

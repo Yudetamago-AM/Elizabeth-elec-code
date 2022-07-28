@@ -22,6 +22,8 @@ https://github.com/adafruit/Adafruit_BNO055
 #include <SD_RW.h>
 
 #define ANGLE_TH 0.39//前45度，GPS誘導
+#define LONGITUDE_PER_RES 153
+#define LATITUDE_PER_RES 185
 
 byte phase = 0;
 /*重要！！電源オンからのタイマー，ミリ秒単位で指定*/
@@ -99,12 +101,12 @@ void setup() {
     pinMode(PIN_DIST_ECHO, INPUT);
     digitalWrite(PIN_DIST_TRIG, LOW);
 
-    /*flight pin initialize*/
+    /*flight pin initialize*/+
     pinMode(PIN_FLIGHT, INPUT);
 
     //4debug
     //Serial.println(F("setup done!"));
-    sd_log(F("State,Decision,Control,Long,Lat,Angle"));//S: State, D: Decision, C: Control, R: Result
+    sd_log(F("State,Decision,Control"));//S: State, D: Decision, C: Control, R: Result
     sd_log(F("Init done!"));
     sd_log("Goal_lat: " + String(goal_latitude));
     sd_log("Goal_long: " + String(goal_longitude));
@@ -225,11 +227,11 @@ void GuideGPS() {
     
     angle = direction + e_orientation_now.x();
 
-    while (angle > PI) {
-        angle -= PI;
+    while (angle > PI_FLOAT) {
+        angle -= PI_FLOAT;
     }
-    while (angle < ((-1) * PI)) {
-        angle += PI;
+    while (angle < ((-1) * PI_FLOAT)) {
+        angle += PI_FLOAT;
     }
     /*
     sd_log(",goal or:" + String(angle) + ",,");
@@ -313,9 +315,9 @@ void GuideDIST() {
             getRad(&e_orientation_now);
             rotate(e_orientation_now.x() - (0.175 * (18 - i)));
             delay(10);
-            motor_forward(255, 255);
             //millisTemp2 = millis();
             sd_log(F(",,m_f:255255"));
+            motor_forward(255, 255);
             delay(850);
             /*
             while (1) {
@@ -378,7 +380,7 @@ void Backward() {
     while (!((e_orientation_now.z() > -0.5) && (e_orientation_now.z() < 1))) {//あとで閾値設定
         sd_log("or_y:" + String(e_orientation_now.y()));
         sd_log(F(",,m_f:178178"));
-        motor_forward(178, 178);
+        motor_backward(178, 178);
         getRad(&e_orientation_now);
     }
     motor_stop();
@@ -427,7 +429,7 @@ double getGPS(double* direction, double* distance) {
 
     while (true) {
         if (GPS.check() && GPS.isTimeUpdate() && GPS.isLocationUpdate()) {
-        ////Serial.println(F("gps updated (getGPS)"));
+        //Serial.println(F("gps updated (getGPS)"));
         //byte tri_goal_latitude = underbyte(goal_latitude);
 
         //計算
@@ -444,13 +446,13 @@ double getGPS(double* direction, double* distance) {
         //Serial.println(dy);
         */
         //x, yの変位
-        long dx = ((goal_longitude - GPS.longitude()) * 153);//0.000001度で0.92m(京田辺)，0.85m(能代)より，単位メートル
-        long dy = ((goal_latitude - GPS.latitude()) * 185);//0.000001度で0.111m(111)より0.1
+        long dx = ((goal_longitude - GPS.longitude()) * LONGITUDE_PER_RES);//0.000001度で0.92m(京田辺)，0.85m(能代)より，単位メートル
+        long dy = ((goal_latitude - GPS.latitude()) * LATITUDE_PER_RES);//0.000001度で0.111m(111)より0.1
         
         if (dx == 0 && dy == 0) *direction = 0;
         else *direction = atan2(dx, dy);//意図的にdx, dyの順，というのも，北基準だから．
         *distance = approx_distance(dx, dy) / 10;//単位:cm
-        ////Serial.println(F("calc done (getGPS)"));
+        //Serial.println(F("calc done (getGPS)"));
         //Serial.print(F("dir: "));
         //Serial.println(*direction);
         //Serial.print(F("dist: "));
@@ -463,13 +465,13 @@ double getGPS(double* direction, double* distance) {
 
         //4debug
         //start = millis();
-        sd_log(",,," + String(GPS.longitude()) + "," + String(GPS.latitude()) + "," + String(e_orientation_now.x()));
-        //sd_gpslog(GPS.longitude(), GPS.latitude(), e_orientation_now.x());
+        //sd_log(",,," + String(GPS.longitude()) + "," + String(GPS.latitude()) + "," + String(e_orientation_now.x()));
+        sd_gpslog(GPS.longitude(), GPS.latitude(), e_orientation_now.x());
         //sd_gpslog(GPS.longitude() / 600000.0, GPS.latitude() / 600000.0, e_orientation_now.x());        
         //end = millis() - start;
 
-        ////Serial.print(F("sd write took(ms) : "));//およそ95msかかっていた
-        ////Serial.println(end);
+        //Serial.print(F("sd write took(ms) : "));//およそ95msかかっていた
+        //Serial.println(end);
         break;
         }
     }
