@@ -45,7 +45,7 @@ SCL A5
 #define PIN_NICHROME 7
 
 /*定数*/
-#define PI 3.1415926535
+#define PI 3.14159
 #define RADPI 57.2957795131
 
 #endif
