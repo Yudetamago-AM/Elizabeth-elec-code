@@ -108,8 +108,8 @@ void setup() {
     //Serial.println(F("setup done!"));
     sd_log(F("State,Decision,Control"));//S: State, D: Decision, C: Control, R: Result
     sd_log(F("Init done!"));
-    sd_log("G_lat: " + String(goal_latitude));
-    sd_log("G_long: " + String(goal_longitude));
+    sd_log("G_lat:" + String(goal_latitude));
+    sd_log("G_long:" + String(goal_longitude));
     //getGPS(NULL, NULL);
     delay(50);
 }
@@ -125,7 +125,6 @@ void loop() {
         Landing();
         break;
     case 2:
-        Backward();
         GuideGPS();
         //stack();
         break;
@@ -156,10 +155,12 @@ void waitTilUnPlug() {
         //Serial.println(F("pin ms set!"));
         sd_log(F("F_Pin:removed"));
         phase = 1;//landing
+        BnoGetCal();
     } else if (Timer <= millis()) {
         phase = 1;
     }
     delay(50);
+    return;
 }
 
 void Landing() {
@@ -178,6 +179,11 @@ void Landing() {
         Nichrome();
     }
 
+    BnoGetCal();
+    //Serial.println(F("done"));
+}
+
+void BnoGetCal() {
     //センサーのキャリブレーションしとく
     byte mag;
     for (byte i = 0; i < 100; i++) {
@@ -185,7 +191,7 @@ void Landing() {
         delay(10);
         if (mag > 0) break;
     }
-    //Serial.println(F("done"));
+    return;
 }
 
 void Nichrome(){
@@ -386,14 +392,15 @@ void Backward() {
     sd_log("or_y:" + String(e_orientation_now.y()));
     sd_log(F(",,m_f:178178"));
 
-    while (!((e_orientation_now.z() > -0.5) && (e_orientation_now.z() < 1))) {//あとで閾値設定  
-        motor_backward(178, 178);
+    while (!((e_orientation_now.z() > -0.3) && (e_orientation_now.z() < 0.3))) {//あとで閾値設定  
+        motor_forward(178, 178);
         getRad(&e_orientation_now);
     }
     motor_stop();
     
     return;
 }
+
 /*Landing用
 bool isLanded() {
     bool isLanded = false;

@@ -26,10 +26,6 @@ void loop() {
     motor_stop();
     Backward();
 
-    motor_forward(255, 255);
-    delay(2000);
-    motor_stop();
-
     delay(5000);
 }
 
@@ -37,10 +33,10 @@ void Backward() {
     imu::Vector<3> e_orientation_now;
     getRad(&e_orientation_now);
 
-    while (!((e_orientation_now.z() > -0.5) && (e_orientation_now.z() < 1))) {//あとで閾値設定
+    while (!((e_orientation_now.z() > -0.3) && (e_orientation_now.z() < 0.3))) {//あとで閾値設定
         //sd_log("or_y:" + String(e_orientation_now.y()));
         //sd_log(F(",,m_f:178178"));
-        motor_backward(178, 178);
+        motor_forward(178, 178);
         getRad(&e_orientation_now);
     }
     motor_stop();
