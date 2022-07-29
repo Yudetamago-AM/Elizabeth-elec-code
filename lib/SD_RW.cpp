@@ -3,7 +3,7 @@
 String fileName;
 int countFileName;
 static bool log_isFirst;
-//static bool gpslog_isFirst;
+static bool gpslog_isFirst;
 
 void sd_init() {
     pinMode(PIN_SD_CS, OUTPUT);
@@ -20,7 +20,6 @@ void sd_init() {
     while ((SD.exists("L" + String(countFileName) + ".csv")) || (SD.exists("G" + String(countFileName) + ".csv"))) {
         if (countFileName == 1000) {
             Serial.println(F("too much file exists"));
-            countFileName = 999;
             break;
         }
         countFileName++;
@@ -30,9 +29,9 @@ void sd_init() {
     //Serial.println(fileName);
 
     log_isFirst = true;
-    //gpslog_isFirst = true;
+    gpslog_isFirst = true;
     Serial.println(F("SD ready"));
-}
+} 
 
 void sd_log(String text) {
     File logText = SD.open("L" + fileName, FILE_WRITE);
@@ -45,13 +44,12 @@ void sd_log(String text) {
         }
         logText.println(String(millis()) + "," + text);
     } else {
-        //Serial.println(F("SD_RW log error"));
+        //Serial.println(F("log err"));
     }
     logText.close();
 }
 
-/*
-void sd_gpslog(long longitude, long latitude, float angle) {
+void sd_gpslog(String longitude, String latitude, String angle) {
     //あらかじめ1/60000しておいたものを入力
     File logText = SD.open("G" + fileName, FILE_WRITE);
     if (logText) {
@@ -60,14 +58,13 @@ void sd_gpslog(long longitude, long latitude, float angle) {
             sd_gpslog(longitude, latitude, angle);
             gpslog_isFirst = false;
         }
-        logText.println(String(millis()) + "," + longitude + "," + latitude + "," + String(angle, 4));
+        logText.println(String(millis()) + "," + longitude + "," + latitude + "," + angle);
         //https://stackoverflow.com/questions/23936246/error-invalid-operands-of-types-const-char-35-and-const-char-2-to-binar
     } else {
-        //Serial.println(F("SD_RW gpslog error"));
+        Serial.println(F("glog err"));
     }
     logText.close();
 }
-*/
 
 /*
 認識：自分の地点（gpsLog()），目標地点(log())

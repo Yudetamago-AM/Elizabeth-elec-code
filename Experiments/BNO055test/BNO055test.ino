@@ -56,16 +56,19 @@ void loop() {
     Serial.println(e_orientation_now.z() * RADPI, 10);
     Serial.println("");
     */
+    /*
     Serial.println("orientation: ");
     Serial.print(" x: ");
     Serial.println(e_orientation_now.x(), 10);
     Serial.print(" y: ");
     Serial.println(e_orientation_now.y(), 10);
+    */
     Serial.print(" z: ");
     Serial.println(e_orientation_now.z(), 10);
     Serial.println("");
+    
 
-    /*test accel;*/
+    /*test accel
     sensors_event_t accelData;
     bno.getEvent(&accelData, Adafruit_BNO055::VECTOR_LINEARACCEL);
     //VECTOR_ACCELEROMETERだと，重力加速度も入ってる．
@@ -76,6 +79,8 @@ void loop() {
     Serial.println(accelData.acceleration.y, 6);
     Serial.print(" z: ");
     Serial.println(accelData.acceleration.z, 6);
+    */
+
     /*
     imu::Vector<3> accelData = bno.getVector(Adafruit_BNO055::VECTOR_LINERACCEL);
     Serial.println("accel:");
