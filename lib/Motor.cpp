@@ -25,22 +25,14 @@ void motor_forward(byte pwmR, byte pwmL) {
     digitalWrite(PIN_MO_L_B, LOW);
 }
 
-<<<<<<< HEAD
 
-void motor_back(byte pwmR, byte pwmL) {
-=======
 void motor_backward(byte pwmR, byte pwmL) {
->>>>>>> 5cdf6bf04837fe92dd2e1934b039f06f7cd8861b
     digitalWrite(PIN_MO_R_A, LOW);
     digitalWrite(PIN_MO_L_A, LOW);
 
     analogWrite(PIN_MO_R_B, pwmR);
     analogWrite(PIN_MO_L_B, pwmL);
 }
-<<<<<<< HEAD
-
-=======
->>>>>>> 5cdf6bf04837fe92dd2e1934b039f06f7cd8861b
 
 void motor_stop() {
     // すべてLOW

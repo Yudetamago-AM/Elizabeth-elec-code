@@ -32,10 +32,11 @@ const unsigned long Timer = 600000; //600 * 1000, 600秒 は 10分
 const unsigned int flightPinTimer = 10000;//50s//10s
 unsigned long flightPinMillis;
 /*重要！！ゴールのGPS座標*/
-const long goal_longitude = 81462529; //経度*600000(60万)
-const long goal_latitude = 20880914; //緯度*600000
+const long goal_longitude = 81462526; //経度*600000(60万)
+const long goal_latitude = 20880923; //緯度*600000
 
 bool isFirstUnplug = true;
+bool isFirstDIST = false;
 byte goalCount = 0;
 
 GPS_MTK333X_SoftwareSerial GPS(PIN_GPS_RX, PIN_GPS_TX);
@@ -129,12 +130,12 @@ void loop() {
         //stack();
         break;
     case 3:
-        Backward();
+        //Backward();
         GuideDIST();
         //stack();
         break;
     case 4:
-        Backward();
+        //Backward();
         Goal();
         //stack();
         break;
@@ -292,6 +293,12 @@ void GuideGPS() {
 
 void GuideDIST() {
     //Serial.println(F("gidD bgn"));
+    if (isFirstDIST == true) {
+        motor_forward(255, 255);
+        delay(2000);
+        motor_stop();
+        isFirstDIST = false;
+    }
     /*精密誘導が上手くいかない場合*/
     if (goalCount > 4) {
         phase = 5;
