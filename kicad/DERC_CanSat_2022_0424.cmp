@@ -1,0 +1,403 @@
+Cmp-Mod V01 Created by PcbNew   date = 2022/04/24 17:01:26
+
+BeginCmp
+TimeStamp = dfb32d4e-1e78-42b7-a663-e1b355f42b63
+Path = /c8558564-10c8-46b2-9ca0-16a08c93ce1a
+Reference = IC4;
+ValeurCmp = TB67H450FNG,EL;
+IdModule  = SamacSys_Parts:SOIC127P600X175-9N;
+EndCmp
+
+BeginCmp
+TimeStamp = 90d07276-9185-44ec-9e1f-6860884905c3
+Path = /13148b63-fe62-4aa8-82c4-9b1e6ff098c9
+Reference = IC5;
+ValeurCmp = TB67H450FNG,EL;
+IdModule  = SamacSys_Parts:SOIC127P600X175-9N;
+EndCmp
+
+BeginCmp
+TimeStamp = 3ebdb4d8-5ba4-4f01-b2bd-cf9dc7ccff38
+Path = 
+Reference = [NoRef];
+ValeurCmp = [NoVal];
+IdModule  = ;
+EndCmp
+
+BeginCmp
+TimeStamp = 7ffeb8cf-dcf8-4573-b0fd-1354d335918c
+Path = 
+Reference = [NoRef];
+ValeurCmp = [NoVal];
+IdModule  = ;
+EndCmp
+
+BeginCmp
+TimeStamp = 5c01aa16-f78b-4703-97d1-f4071cc7ee95
+Path = 
+Reference = REF**;
+ValeurCmp = MountingHole_3.2mm_M3;
+IdModule  = MountingHole:MountingHole_3.2mm_M3;
+EndCmp
+
+BeginCmp
+TimeStamp = 16a47d5d-a4a4-4ba4-a9d7-61905ac67eb5
+Path = 
+Reference = REF**;
+ValeurCmp = MountingHole_3.2mm_M3;
+IdModule  = MountingHole:MountingHole_3.2mm_M3;
+EndCmp
+
+BeginCmp
+TimeStamp = 6872322c-eae2-4035-8551-6a513c7c82be
+Path = /14eb4f59-c7a5-4e52-ae4f-09d7e0287e03
+Reference = C2;
+ValeurCmp = 0.1u;
+IdModule  = Capacitor_THT:C_Disc_D3.0mm_W1.6mm_P2.50mm;
+EndCmp
+
+BeginCmp
+TimeStamp = 4e7ead2d-6e13-4764-a5f6-2159d073d12c
+Path = /80f2c99b-a441-4640-a481-5c49cb83448b
+Reference = C9;
+ValeurCmp = 1000u;
+IdModule  = Capacitor_THT:CP_Radial_D10.0mm_P5.00mm;
+EndCmp
+
+BeginCmp
+TimeStamp = ea992605-2e26-4de7-b8d6-cf9feff73499
+Path = /c4942652-f2ef-477b-a37e-6c8bfdb5b70a
+Reference = C8;
+ValeurCmp = 1000u;
+IdModule  = Capacitor_THT:CP_Radial_D10.0mm_P5.00mm;
+EndCmp
+
+BeginCmp
+TimeStamp = 031d52f3-b212-4fa1-b3cb-246aa6743308
+Path = /e7254e8c-37de-4ab6-a82f-0ab0c6ee8326
+Reference = C4;
+ValeurCmp = 22p;
+IdModule  = Capacitor_THT:C_Disc_D3.0mm_W1.6mm_P2.50mm;
+EndCmp
+
+BeginCmp
+TimeStamp = 07d8b9e7-0815-4061-8de0-5c9b5d0f26aa
+Path = /346dfd7d-adce-4a05-84f9-b625c2a56cb3
+Reference = R3;
+ValeurCmp = 1;
+IdModule  = Resistor_THT:R_Axial_DIN0207_L6.3mm_D2.5mm_P2.54mm_Vertical;
+EndCmp
+
+BeginCmp
+TimeStamp = 1d057313-3285-48ec-bc3f-65328e1122b8
+Path = /3249bd81-9fd4-4194-9b4f-2e333b2195b8
+Reference = IC1;
+ValeurCmp = NJM2845DL1-05-TE1;
+IdModule  = Package_TO_SOT_SMD:TO-252-2;
+EndCmp
+
+BeginCmp
+TimeStamp = 2f51824b-e21c-47b1-a957-9c6156d89475
+Path = /1ef6083f-3ee9-44a9-8f06-4a7cbc5c82b0
+Reference = IC2;
+ValeurCmp = NJM78L33SU3;
+IdModule  = Package_TO_SOT_SMD:SOT-89-3;
+EndCmp
+
+BeginCmp
+TimeStamp = 310387d8-b8b5-4487-982c-5629e07ee531
+Path = /e3e895bd-8dd5-4e62-85fc-961d93880236
+Reference = R5;
+ValeurCmp = 10k;
+IdModule  = Resistor_THT:R_Axial_DIN0207_L6.3mm_D2.5mm_P7.62mm_Horizontal;
+EndCmp
+
+BeginCmp
+TimeStamp = 3d0f7ea5-586a-4631-84b5-c5143f12bf84
+Path = /9b763aa9-98d1-4b71-a056-8928b24fddb3
+Reference = M2;
+ValeurCmp = Motor_DC_2;
+IdModule  = Connector_JST:JST_XH_B2B-XH-A_1x02_P2.50mm_Vertical;
+EndCmp
+
+BeginCmp
+TimeStamp = 4a727663-1162-46be-ad2e-a1e063016c57
+Path = /c822714d-b81d-4c01-8790-2ce130865818
+Reference = U3;
+ValeurCmp = GNSS;
+IdModule  = DERC_CanSat_footprint:GNSS;
+EndCmp
+
+BeginCmp
+TimeStamp = 5204acc0-f1d4-4acd-9021-97fbb50bb22e
+Path = /fa9a51a0-746b-4882-bca5-07792cee681a
+Reference = C3;
+ValeurCmp = 22p;
+IdModule  = Capacitor_THT:C_Disc_D3.0mm_W1.6mm_P2.50mm;
+EndCmp
+
+BeginCmp
+TimeStamp = 5892c255-ef19-4cee-883d-c9263ffdbb27
+Path = /3e1cb3e4-d855-414e-b1ff-d8f86a215960
+Reference = S1;
+ValeurCmp = SS-22F06-G5-A;
+IdModule  = DERC_CanSat_footprint:PowerSwitch;
+EndCmp
+
+BeginCmp
+TimeStamp = 58cffa28-9a76-45fe-b5c4-37558f4eaeeb
+Path = /2ee4f798-d10a-4b18-a80c-5770a68e2615
+Reference = Q1;
+ValeurCmp = Q_NMOS_GDS;
+IdModule  = SamacSys_Parts:TO229P241X654X988-3P;
+EndCmp
+
+BeginCmp
+TimeStamp = 5e20784c-a757-4f37-b1f3-c699de20a64d
+Path = /131459e2-3999-4ad9-9747-6fcc28c9e2ca
+Reference = J3;
+ValeurCmp = Nichrome_Conn_01x02_Male;
+IdModule  = TerminalBlock:TerminalBlock_Altech_AK300-2_P5.00mm;
+EndCmp
+
+BeginCmp
+TimeStamp = 62b04c01-f216-4648-a8ff-92e79b27eadf
+Path = /e3cea3fd-63d0-4237-b17e-f038c3682f38
+Reference = R2;
+ValeurCmp = 10k;
+IdModule  = Resistor_THT:R_Axial_DIN0207_L6.3mm_D2.5mm_P7.62mm_Horizontal;
+EndCmp
+
+BeginCmp
+TimeStamp = 65842bb4-1353-411b-b218-cee79f191ec3
+Path = /70adebd9-19d2-4f71-abf0-c52128d634bf
+Reference = R6;
+ValeurCmp = 1k;
+IdModule  = Resistor_THT:R_Axial_DIN0207_L6.3mm_D2.5mm_P7.62mm_Horizontal;
+EndCmp
+
+BeginCmp
+TimeStamp = 67445686-989a-4d04-a396-b1a114aea0c4
+Path = /c4235eb9-4a8a-41d9-8f99-f3e342700b89
+Reference = D1;
+ValeurCmp = 1N4148;
+IdModule  = Diode_THT:D_DO-35_SOD27_P7.62mm_Horizontal;
+EndCmp
+
+BeginCmp
+TimeStamp = 6ba9009e-4217-4db1-9e03-0e0bec07ea5d
+Path = /35bd06d1-6d5e-41e2-9954-4a8999f790cc
+Reference = D3;
+ValeurCmp = LED;
+IdModule  = LED_THT:LED_D3.0mm;
+EndCmp
+
+BeginCmp
+TimeStamp = 718c1ef1-1533-46c9-921a-3f458f4a9b3b
+Path = /8bc2c25a-a1f1-4ce8-b96a-a4f8f4c35079
+Reference = U1;
+ValeurCmp = ATmega328P-P;
+IdModule  = Package_DIP:DIP-28_W7.62mm;
+EndCmp
+
+BeginCmp
+TimeStamp = 73f84fa1-ef3d-4a6a-8ff7-1123555b2e4a
+Path = /9c6c5675-d78d-4a6d-b00f-22547ffb1790
+Reference = Y1;
+ValeurCmp = 16M;
+IdModule  = Crystal:Crystal_HC49-4H_Vertical;
+EndCmp
+
+BeginCmp
+TimeStamp = 77922b18-1378-4ef3-bf4d-c3e36be9ef26
+Path = /1058047a-9c9e-432f-aca6-19618549c3bd
+Reference = U2;
+ValeurCmp = HC-SR04;
+IdModule  = DERC_CanSat_footprint:HC-SR04;
+EndCmp
+
+BeginCmp
+TimeStamp = 784bef87-c95a-4e2d-a413-6f02a173a248
+Path = /aede30ce-d06e-499b-aeb2-6a5a6003005a
+Reference = M1;
+ValeurCmp = Motor_DC_1;
+IdModule  = Connector_JST:JST_XH_B2B-XH-A_1x02_P2.50mm_Vertical;
+EndCmp
+
+BeginCmp
+TimeStamp = 83da6951-2ef7-4000-955f-3590306ecab2
+Path = /af24dc04-a015-475f-8375-9ed80026f65a
+Reference = R8;
+ValeurCmp = 1;
+IdModule  = Resistor_THT:R_Axial_DIN0207_L6.3mm_D2.5mm_P2.54mm_Vertical;
+EndCmp
+
+BeginCmp
+TimeStamp = 856ed3a9-9574-463e-bcc8-754b2cf70ed1
+Path = /bd2be25c-9e1b-439e-ac28-40c414b61df5
+Reference = U5;
+ValeurCmp = AE-BNO055;
+IdModule  = DERC_CanSat_footprint:AE-BNO055;
+EndCmp
+
+BeginCmp
+TimeStamp = 8b6b8b53-c3dc-4245-9bc7-039ba6ae95da
+Path = /52e62aa8-d073-4311-ac89-1deff87fd81a
+Reference = C6;
+ValeurCmp = 0.1u;
+IdModule  = Capacitor_THT:C_Disc_D3.0mm_W1.6mm_P2.50mm;
+EndCmp
+
+BeginCmp
+TimeStamp = 8df9b642-1ad5-41c6-9db1-d25d8490b6ef
+Path = /c9695567-302b-48b2-88db-c4fd74b9291b
+Reference = SW2;
+ValeurCmp = SW_DIP_x01;
+IdModule  = SamacSys_Parts:TVBP06B043CWB;
+EndCmp
+
+BeginCmp
+TimeStamp = 96192a77-f856-4e01-bab5-27698a4ddf6c
+Path = /4b2e36b2-c0f8-4ebc-93a4-e1796ff1d17b
+Reference = C7;
+ValeurCmp = 0.1u;
+IdModule  = Capacitor_THT:C_Disc_D3.0mm_W1.6mm_P2.50mm;
+EndCmp
+
+BeginCmp
+TimeStamp = 9b958bf4-8ea5-4b86-9e8a-206907cb1cd7
+Path = /5957264b-f498-4b37-b649-f5f2226aa533
+Reference = R4;
+ValeurCmp = 1;
+IdModule  = Resistor_THT:R_Axial_DIN0207_L6.3mm_D2.5mm_P2.54mm_Vertical;
+EndCmp
+
+BeginCmp
+TimeStamp = a007b3e6-832d-429d-bfca-72e56e79ae6e
+Path = /2053575e-ccc2-4953-89d0-9df7f08f82fc
+Reference = U6;
+ValeurCmp = Writer;
+IdModule  = Connector_PinHeader_2.54mm:PinHeader_1x05_P2.54mm_Vertical;
+EndCmp
+
+BeginCmp
+TimeStamp = a382fb6b-9946-4a34-be6e-fe5afc7b4718
+Path = /31eaeaa0-b56c-4f82-951e-918733a10cb1
+Reference = J2;
+ValeurCmp = Conn_01x02_Male;
+IdModule  = Connector_JST:JST_PH_B3B-PH-K_1x03_P2.00mm_Vertical;
+EndCmp
+
+BeginCmp
+TimeStamp = a4c977e2-1818-430c-a233-8999d46d19ec
+Path = /f0634b33-78bb-47f5-98df-5ea856720e18
+Reference = J1;
+ValeurCmp = Conn_01x02_Male;
+IdModule  = Connector_JST:JST_PH_B3B-PH-K_1x03_P2.00mm_Vertical;
+EndCmp
+
+BeginCmp
+TimeStamp = ade9dcd9-883b-4bb2-bd06-a4622f6b2224
+Path = /29b9a0e5-0d4a-427b-b6bb-7001dc45a4f7
+Reference = C1;
+ValeurCmp = 0.1u;
+IdModule  = Capacitor_THT:C_Disc_D3.0mm_W1.6mm_P2.50mm;
+EndCmp
+
+BeginCmp
+TimeStamp = b1c07a68-cec3-4ed9-b72f-37c05e31eb48
+Path = /ad910868-43a9-4fe8-93b1-4c254bd7f5b8
+Reference = R7;
+ValeurCmp = 1;
+IdModule  = Resistor_THT:R_Axial_DIN0207_L6.3mm_D2.5mm_P2.54mm_Vertical;
+EndCmp
+
+BeginCmp
+TimeStamp = b690f6e6-1a91-4933-96c4-f5260eae3f12
+Path = /318844ff-6b33-48b1-8dcf-8bc05e09b6fb
+Reference = D4;
+ValeurCmp = LED;
+IdModule  = LED_THT:LED_D3.0mm;
+EndCmp
+
+BeginCmp
+TimeStamp = bd7339fa-8fc0-4696-b90b-3806fe744c0f
+Path = /fe48e103-08f5-43b9-95cc-c9697506de99
+Reference = R10;
+ValeurCmp = 1;
+IdModule  = Resistor_THT:R_Axial_DIN0207_L6.3mm_D2.5mm_P2.54mm_Vertical;
+EndCmp
+
+BeginCmp
+TimeStamp = c97e6bdb-3810-4a76-8f21-d3ce7c13311d
+Path = /a5e1fd5a-77ca-46f9-ae6f-02194c674cd5
+Reference = R11;
+ValeurCmp = 1k;
+IdModule  = Resistor_THT:R_Axial_DIN0207_L6.3mm_D2.5mm_P7.62mm_Horizontal;
+EndCmp
+
+BeginCmp
+TimeStamp = d86d0693-6e8f-4bfb-b5ba-7c48ad52def0
+Path = /ed8bf717-23f5-474f-81e0-5dd71c74c89a
+Reference = R1;
+ValeurCmp = 10k;
+IdModule  = Resistor_THT:R_Axial_DIN0207_L6.3mm_D2.5mm_P7.62mm_Horizontal;
+EndCmp
+
+BeginCmp
+TimeStamp = ebfaba76-65cf-41cf-9ee0-099bb5c65586
+Path = /21e4a5a4-c783-493c-8c37-54605f426ae9
+Reference = R12;
+ValeurCmp = 1k;
+IdModule  = Resistor_THT:R_Axial_DIN0207_L6.3mm_D2.5mm_P7.62mm_Horizontal;
+EndCmp
+
+BeginCmp
+TimeStamp = f2400802-90eb-4862-867f-6d34263b84b8
+Path = /64288fff-8da9-4f5c-90a7-17def262f9e1
+Reference = IC3;
+ValeurCmp = NJM78L33SU3;
+IdModule  = Package_TO_SOT_SMD:SOT-89-3;
+EndCmp
+
+BeginCmp
+TimeStamp = f499cb31-fc6f-47cd-beac-57110b506c7e
+Path = /ce33732d-fbfb-4f57-9861-fed05c98dcf2
+Reference = D2;
+ValeurCmp = LED;
+IdModule  = LED_THT:LED_D3.0mm;
+EndCmp
+
+BeginCmp
+TimeStamp = f53f9803-b353-4c51-8ef0-e64f1c9bbba0
+Path = /20eda35d-4099-46fe-b55e-fd57d57e90ab
+Reference = R9;
+ValeurCmp = 1;
+IdModule  = Resistor_THT:R_Axial_DIN0207_L6.3mm_D2.5mm_P2.54mm_Vertical;
+EndCmp
+
+BeginCmp
+TimeStamp = f70ffb2b-2ce6-4449-83bc-fdec3e4ef0f7
+Path = /e0b8a219-8c96-4688-97d6-316cc4f6e83b
+Reference = C5;
+ValeurCmp = 0.1u;
+IdModule  = Capacitor_THT:C_Disc_D3.0mm_W1.6mm_P2.50mm;
+EndCmp
+
+BeginCmp
+TimeStamp = f830eab5-3b07-494b-a8ea-5832d2ee7357
+Path = 
+Reference = 2022;
+ValeurCmp = LOGO;
+IdModule  = DERC_CanSat_footprint:logotekina_25;
+EndCmp
+
+BeginCmp
+TimeStamp = 4988c419-20d8-45b0-ac02-c3d41370d9eb
+Path = /6c53b445-b023-4c61-a860-613351a3f182
+Reference = U4;
+ValeurCmp = SD;
+IdModule  = DERC_CanSat_footprint:SD;
+EndCmp
+
+EndListe
