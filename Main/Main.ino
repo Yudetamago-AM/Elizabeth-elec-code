@@ -22,6 +22,8 @@ https://github.com/adafruit/Adafruit_BNO055
 #include <SD_RW.h>
 
 #define ANGLE_TH 0.39//前45度，GPS誘導
+#define LONGITUDE_PER_RES 153
+#define LATITUDE_PER_RES 185
 
 byte phase = 0;
 /*重要！！電源オンからのタイマー，ミリ秒単位で指定*/
@@ -30,10 +32,11 @@ const unsigned long Timer = 600000; //600 * 1000, 600秒 は 10分
 const unsigned int flightPinTimer = 10000;//50s//10s
 unsigned long flightPinMillis;
 /*重要！！ゴールのGPS座標*/
-const long goal_longitude = 81462529; //経度*600000(60万)
-const long goal_latitude = 20880914; //緯度*600000
+const long goal_longitude = 81462526; //経度*600000(60万)
+const long goal_latitude = 20880923; //緯度*600000
 
 bool isFirstUnplug = true;
+bool isFirstDIST = false;
 byte goalCount = 0;
 
 GPS_MTK333X_SoftwareSerial GPS(PIN_GPS_RX, PIN_GPS_TX);
@@ -50,8 +53,8 @@ void setup() {
     digitalWrite(PIN_NICHROME, LOW);
 
     /*//Serial (for debug) initialize*/
-    //Serial.begin(9600);
-    //Serial.println(F("Serial begin"));
+    Serial.begin(9600);
+    Serial.println(F("Serial begin"));
 
     /*FOR DEBUG!! mem check*/
     /*不要なときはコメントアウト！！*/
@@ -104,11 +107,12 @@ void setup() {
 
     //4debug
     //Serial.println(F("setup done!"));
-    sd_log(F("State,Decision,Control,Long,Lat,Angle"));//S: State, D: Decision, C: Control, R: Result
+    sd_log(F("State,Decision,Control"));//S: State, D: Decision, C: Control, R: Result
     sd_log(F("Init done!"));
-    sd_log("Goal_lat: " + String(goal_latitude));
-    sd_log("Goal_long: " + String(goal_longitude));
-    getGPS(NULL, NULL);
+    sd_log("G_lat:" + String(goal_latitude));
+    sd_log("G_long:" + String(goal_longitude));
+    //getGPS(NULL, NULL);
+    delay(50);
 }
 
 void loop() {
@@ -122,17 +126,16 @@ void loop() {
         Landing();
         break;
     case 2:
-        Backward();
         GuideGPS();
         //stack();
         break;
     case 3:
-        Backward();
+        //Backward();
         GuideDIST();
         //stack();
         break;
     case 4:
-        Backward();
+        //Backward();
         Goal();
         //stack();
         break;
@@ -145,24 +148,28 @@ void loop() {
 
 /*各シークエンス*/
 void waitTilUnPlug() {
+    Serial.println(F("wait"));
     //フライトピン
     if ((digitalRead(PIN_FLIGHT) == HIGH) && isFirstUnplug) {
         flightPinMillis = millis();
         isFirstUnplug = false;
         //Serial.println(F("pin ms set!"));
-        sd_log(F("FlightPin removed"));
+        sd_log(F("F_Pin:removed"));
         phase = 1;//landing
+        BnoGetCal();
     } else if (Timer <= millis()) {
         phase = 1;
     }
     delay(50);
+    return;
 }
 
 void Landing() {
+    Serial.println(F("land"));
     //Serial.println(F("Landing seq begin"));
     //if (millis() <= flightPinMillis + flightPinTimer) return;
     if (((flightPinMillis + flightPinTimer) <= millis())) {
-        sd_log(F(",FlightPin:landed"));
+        sd_log(F(",F_Pin:landed"));
         // 前にうごかしたりパラシュート切り離したり…
         /*ニクロム線のカット*/
         Nichrome();
@@ -173,6 +180,11 @@ void Landing() {
         Nichrome();
     }
 
+    BnoGetCal();
+    //Serial.println(F("done"));
+}
+
+void BnoGetCal() {
     //センサーのキャリブレーションしとく
     byte mag;
     for (byte i = 0; i < 100; i++) {
@@ -180,10 +192,11 @@ void Landing() {
         delay(10);
         if (mag > 0) break;
     }
-    //Serial.println(F("done"));
+    return;
 }
 
 void Nichrome(){
+        Serial.println(F("nic"));
         digitalWrite(PIN_NICHROME, HIGH);
         delay(2000);
         motor_forward(255, 255);
@@ -196,6 +209,7 @@ void Nichrome(){
 
 /*guide to the goal using GPS*/
 void GuideGPS() {
+    Serial.println(F("gps"));
     //Serial.println(F("gidG bgn"));
     sd_log(F("GPS Guide"));
     //方位・距離を計算
@@ -203,6 +217,8 @@ void GuideGPS() {
     imu::Vector<3> e_orientation_now;
 
     getGPS(&direction, &distance);
+    sd_log("dir:" + String(direction));
+    sd_log("dist:" + String(distance));
 
     //ゴールまでgpsで2.5m以内なら，精密誘導へ
     if (distance <= 300) {//1.5 * 100 * 600000，あってるかわからない
@@ -225,11 +241,11 @@ void GuideGPS() {
     
     angle = direction + e_orientation_now.x();
 
-    while (angle > PI) {
-        angle -= PI;
+    while (angle > PI_FLOAT) {
+        angle -= PI_FLOAT;
     }
-    while (angle < ((-1) * PI)) {
-        angle += PI;
+    while (angle < ((-1) * PI_FLOAT)) {
+        angle += PI_FLOAT;
     }
     /*
     sd_log(",goal or:" + String(angle) + ",,");
@@ -277,6 +293,12 @@ void GuideGPS() {
 
 void GuideDIST() {
     //Serial.println(F("gidD bgn"));
+    if (isFirstDIST == true) {
+        motor_forward(255, 255);
+        delay(2000);
+        motor_stop();
+        isFirstDIST = false;
+    }
     /*精密誘導が上手くいかない場合*/
     if (goalCount > 4) {
         phase = 5;
@@ -313,9 +335,9 @@ void GuideDIST() {
             getRad(&e_orientation_now);
             rotate(e_orientation_now.x() - (0.175 * (18 - i)));
             delay(10);
-            motor_forward(255, 255);
             //millisTemp2 = millis();
             sd_log(F(",,m_f:255255"));
+            motor_forward(255, 255);
             delay(850);
             /*
             while (1) {
@@ -374,10 +396,10 @@ void Goal() {
 void Backward() {
     imu::Vector<3> e_orientation_now;
     getRad(&e_orientation_now);
+    sd_log("or_y:" + String(e_orientation_now.y()));
+    sd_log(F(",,m_f:178178"));
 
-    while (!((e_orientation_now.z() > -0.5) && (e_orientation_now.z() < 1))) {//あとで閾値設定
-        sd_log("or_y:" + String(e_orientation_now.y()));
-        sd_log(F(",,m_f:178178"));
+    while (!((e_orientation_now.z() > -0.3) && (e_orientation_now.z() < 0.3))) {//あとで閾値設定  
         motor_forward(178, 178);
         getRad(&e_orientation_now);
     }
@@ -385,6 +407,7 @@ void Backward() {
     
     return;
 }
+
 /*Landing用
 bool isLanded() {
     bool isLanded = false;
@@ -420,15 +443,16 @@ double getGPS(double* direction, double* distance) {
     //const unsigned long R = 6376008;//能代市役所から，地球の中心までの距離
     unsigned long millisTemp;
     imu::Vector<3> e_orientation_now;
-    getRad(&e_orientation_now);
 
     //4debug
     //uint32_t start, end;
 
     while (true) {
         if (GPS.check() && GPS.isTimeUpdate() && GPS.isLocationUpdate()) {
-        ////Serial.println(F("gps updated (getGPS)"));
+        //Serial.println(F("gps updated (getGPS)"));
         //byte tri_goal_latitude = underbyte(goal_latitude);
+        getRad(&e_orientation_now);
+        sd_gpslog(String(GPS.longitude()), String(GPS.latitude()), String(e_orientation_now.x(), 4));
 
         //計算
         
@@ -444,32 +468,32 @@ double getGPS(double* direction, double* distance) {
         //Serial.println(dy);
         */
         //x, yの変位
-        long dx = ((goal_longitude - GPS.longitude()) * 153);//0.000001度で0.92m(京田辺)，0.85m(能代)より，単位メートル
-        long dy = ((goal_latitude - GPS.latitude()) * 185);//0.000001度で0.111m(111)より0.1
+        long dx = ((goal_longitude - GPS.longitude()) * LONGITUDE_PER_RES);//0.000001度で0.92m(京田辺)，0.85m(能代)より，単位メートル
+        long dy = ((goal_latitude - GPS.latitude()) * LATITUDE_PER_RES);//0.000001度で0.111m(111)より0.1
         
         if (dx == 0 && dy == 0) *direction = 0;
         else *direction = atan2(dx, dy);//意図的にdx, dyの順，というのも，北基準だから．
         *distance = approx_distance(dx, dy) / 10;//単位:cm
-        ////Serial.println(F("calc done (getGPS)"));
+        //Serial.println(F("calc done (getGPS)"));
         //Serial.print(F("dir: "));
         //Serial.println(*direction);
         //Serial.print(F("dist: "));
         //Serial.println(*distance);
 
-        millisTemp = millis();
-        sd_log("dir:" + String(*direction));
-        while ((millisTemp + 5) < millis()) {}
-        sd_log("dist:" + String(*distance));
+        //millisTemp = millis();
+        //sd_log("dir:" + String(*direction));
+        //while ((millisTemp + 5) < millis()) {}
+        //sd_log("dist:" + String(*distance));
 
         //4debug
         //start = millis();
-        sd_log(",,," + String(GPS.longitude()) + "," + String(GPS.latitude()) + "," + String(e_orientation_now.x()));
-        //sd_gpslog(GPS.longitude(), GPS.latitude(), e_orientation_now.x());
+        //sd_log(",,," + String(GPS.longitude()) + "," + String(GPS.latitude()) + "," + String(e_orientation_now.x()));
+        //sd_gpslog(String(GPS.longitude()), String(GPS.latitude()), String(e_orientation_now.x(), 4));
         //sd_gpslog(GPS.longitude() / 600000.0, GPS.latitude() / 600000.0, e_orientation_now.x());        
         //end = millis() - start;
 
-        ////Serial.print(F("sd write took(ms) : "));//およそ95msかかっていた
-        ////Serial.println(end);
+        //Serial.print(F("sd write took(ms) : "));//およそ95msかかっていた
+        //Serial.println(end);
         break;
         }
     }

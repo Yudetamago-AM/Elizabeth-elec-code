@@ -23,12 +23,14 @@ void setup() {
 
     /*sd init*/
     sd_init();
+    /*
     byte i;
     for (i = 0; i < 5; i++) {
         //書き込み
         sd_log("hello sd card!>" + String(i));//ここはなぜかFオプションが効かない
         delay(10);
     }
+    */
 
     sd_log("accel x,accel y,accel z");
     Serial.println(F("log done!"));
@@ -40,6 +42,7 @@ void loop(){
     sensors_event_t accelData;
     bno.getEvent(&accelData, Adafruit_BNO055::VECTOR_LINEARACCEL);
     //VECTOR_ACCELEROMETERだと，重力加速度も入ってる．
+    /*
     Serial.println("Accel:");
     Serial.print(" x: ");
     Serial.println(accelData.acceleration.x, 6);
@@ -47,11 +50,13 @@ void loop(){
     Serial.println(accelData.acceleration.y, 6);
     Serial.print(" z: ");
     Serial.println(accelData.acceleration.z, 6);
+    */
     sd_log(String(accelData.acceleration.x, 6) + "," + String(accelData.acceleration.y, 6) + "," + String(accelData.acceleration.z, 6) + ",");
 
      /* Display calibration status for each sensor. */
     uint8_t system, gyro, accel, mag = 0;
     bno.getCalibration(&system, &gyro, &accel, &mag);
+    /*
     Serial.print("CALIBRATION: Sys=");
     Serial.print(system);
     Serial.print(" Gyro=");
@@ -61,6 +66,7 @@ void loop(){
     Serial.print(" Mag=");
     Serial.println(mag);
     Serial.println("");
+    */
     
 }
 
