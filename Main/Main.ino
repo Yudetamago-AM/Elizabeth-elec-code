@@ -22,7 +22,7 @@ https://github.com/adafruit/Adafruit_BNO055
 #include <SD_RW.h>
 
 #define ANGLE_TH 0.39//前45度，GPS誘導
-#define LONGITUDE_PER_RES 153
+#define LONGITUDE_PER_RES 141//能代
 #define LATITUDE_PER_RES 185
 
 byte phase = 0;
@@ -468,7 +468,7 @@ double getGPS(double* direction, double* distance) {
         //Serial.println(dy);
         */
         //x, yの変位
-        long dx = ((goal_longitude - GPS.longitude()) * LONGITUDE_PER_RES);//0.000001度で0.92m(京田辺)，0.85m(能代)より，単位メートル
+        long dx = ((goal_longitude - GPS.longitude()) * LONGITUDE_PER_RES);//0.000001度で0.092m(京田辺)，0.085m(能代)より，単位メートル
         long dy = ((goal_latitude - GPS.latitude()) * LATITUDE_PER_RES);//0.000001度で0.111m(111)より0.1
         
         if (dx == 0 && dy == 0) *direction = 0;

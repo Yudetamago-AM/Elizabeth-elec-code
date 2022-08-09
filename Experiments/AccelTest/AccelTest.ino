@@ -5,7 +5,7 @@
 /*以下lib内自作ライブラリ*/
 #include <PinAssign.h>
 #include <SD_RW.h>
-
+#include <Motor.h>
 Adafruit_BNO055 bno = Adafruit_BNO055(55, 0x28);
 
 void setup() {
@@ -13,6 +13,8 @@ void setup() {
     Serial.begin(9600);
     Serial.println(F("Serial begin"));
 
+    motor_init();
+    motor_stop();
     /*BNO055 initialize*/
     while (!bno.begin()) {
         Serial.println(F("BNO055 not ready"));
@@ -67,6 +69,6 @@ void loop(){
     Serial.println(mag);
     Serial.println("");
     */
-    
+    motor_stop();
 }
 
