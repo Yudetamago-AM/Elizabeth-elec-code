@@ -32,8 +32,8 @@ const unsigned long Timer = 600000; //600 * 1000, 600秒 は 10分
 const unsigned int flightPinTimer = 10000;//50s//10s
 unsigned long flightPinMillis;
 /*重要！！ゴールのGPS座標*/
-const long goal_longitude = 81462526; //経度*600000(60万)
-const long goal_latitude = 20880923; //緯度*600000
+const long goal_longitude = 84082711; //経度*600000(60万)
+const long goal_latitude = 24135694; //緯度*600000
 
 bool isFirstUnplug = true;
 bool isFirstDIST = false;
