@@ -2,11 +2,11 @@
 
 これはテストファイルです．
 
->We look before and after
->　　And pine for what is not:
->Our sincerest laughter
->　　With some pain is fraught;
->Our sweetest songs are those that tell of saddest thought.
+>We look before and after  \
+>　　And pine for what is not:  \
+>Our sincerest laughter  \
+>　　With some pain is fraught;  \
+>Our sweetest songs are those that tell of saddest thought.  \
 
 >「前をみては、後えを見ては、物欲しと、あこがるるかなわれ。腹からの、笑といえど、苦しみの、そこにあるべし。うつくしき、極の歌に、悲しさの、極みの想、籠るとぞ知れ」
 
